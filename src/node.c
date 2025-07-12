@@ -102,6 +102,22 @@ void move_group_node_pins(Node *node) {
             p->x = node->rect.w - (PIN_SIZE / 2);
         }
     }
+
+    for (int i = 0; i < node->inputs->size; i++) {
+        Pin *p = array_get(node->inputs, i);
+        for (int j = 0; j < p->connected_connections->size; j++) {
+            Connection *con = array_get(p->connected_connections, j);
+            update_connection_geometry(con);
+        }
+    }
+
+    for (int i = 0; i < node->outputs->size; i++) {
+        Pin *p = array_get(node->outputs, i);
+        for (int j = 0; j < p->connected_connections->size; j++) {
+            Connection *con = array_get(p->connected_connections, j);
+            update_connection_geometry(con);
+        }
+    }
 }
 
 void handle_close_group(SimulationState *state, void *function_data) {
