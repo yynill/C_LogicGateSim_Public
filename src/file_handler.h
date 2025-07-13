@@ -22,6 +22,6 @@ void load_graph_from_json(void *function_data);
 // Helper functions for JSON parsing
 Operation* get_operation_from_string(const char *op_name);
 Node* json_to_node(cJSON *node_json);
-Connection* json_to_connection(cJSON *connection_json);
+Connection* json_to_connection(DynamicArray *node_layer, cJSON *connection_json);
 
 #endif // FILEHANDLER_H

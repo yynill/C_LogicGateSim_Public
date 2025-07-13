@@ -94,7 +94,7 @@ void load_graph_from_json(void *function_data) {
     if (connections_array && cJSON_IsArray(connections_array)) {
         for (int i = 0; i < cJSON_GetArraySize(connections_array); i++) {
             cJSON *connection_json = cJSON_GetArrayItem(connections_array, i);
-            Connection *connection = json_to_connection(connection_json);
+            Connection *connection = json_to_connection(sim_state->nodes, connection_json);
             if (connection) {
                 array_add(sim_state->connections, connection);
                 propagate_state(connection);
@@ -182,8 +182,12 @@ Node* json_to_node(cJSON *node_json) {
         int sub_connection_size = cJSON_GetArraySize(sub_connections_json);
         for (int i = 0; i < sub_connection_size; i++) {
             cJSON *sub_con_json = cJSON_GetArrayItem(sub_connections_json, i);
-            Connection *sub_con = json_to_connection(sub_con_json);
-            if (sub_con != NULL) array_add(sub_connections, sub_con);
+            Connection *sub_con = json_to_connection(sub_nodes, sub_con_json);
+            if (sub_con) {
+                array_add(sub_connections, sub_con);
+                propagate_state(sub_con);
+                update_connection_geometry(sub_con);
+            }
         }
 
         node = create_group_node(&pos, inputs, outputs, name, sub_nodes, sub_connections, is_expanded);
@@ -200,7 +204,7 @@ Node* json_to_node(cJSON *node_json) {
     return node;
 }
 
-Connection* json_to_connection(cJSON *connection_json) {
+Connection* json_to_connection(DynamicArray *node_layer, cJSON *connection_json) {
     if (!connection_json || !cJSON_IsObject(connection_json)) {
         return NULL;
     }
@@ -219,15 +223,21 @@ Connection* json_to_connection(cJSON *connection_json) {
     int input_pins_size = cJSON_GetArraySize(input_pins_json);
     for (int i = 0; i < input_pins_size; i++) {
         cJSON *pin_id_json = cJSON_GetArrayItem(input_pins_json, i);
-        Pin *pin = find_pin_by_id(sim_state->nodes, pin_id_json->valueint);
-        array_add(connection->input_pins, pin);
+        Pin *pin = find_pin_by_id(node_layer, pin_id_json->valueint);
+        if (pin != NULL) {
+            array_add(connection->input_pins, pin);
+            array_add(pin->connected_connections, connection);
+        }
     }
 
     int output_pins_size = cJSON_GetArraySize(output_pins_json);
     for (int i = 0; i < output_pins_size; i++) {
         cJSON *pin_id_json = cJSON_GetArrayItem(output_pins_json, i);
-        Pin *pin = find_pin_by_id(sim_state->nodes, pin_id_json->valueint);
-        array_add(connection->output_pins, pin);
+        Pin *pin = find_pin_by_id(node_layer, pin_id_json->valueint);
+        if (pin != NULL) {
+            array_add(connection->output_pins, pin);
+            array_add(pin->connected_connections, connection);
+        }
     }
 
     int points_size = cJSON_GetArraySize(points_json);
@@ -238,7 +248,7 @@ Connection* json_to_connection(cJSON *connection_json) {
         cJSON *linked_pin_id_json = cJSON_GetObjectItem(point_json, "linked_pin_id");
         Pin *linked_pin = NULL;
         if (linked_pin_id_json->valueint != -1) {
-            linked_pin = find_pin_by_id(sim_state->nodes, linked_pin_id_json->valueint);
+            linked_pin = find_pin_by_id(node_layer, linked_pin_id_json->valueint);
         }
         add_connection_point(connection, x_json->valueint, y_json->valueint, linked_pin);
     }
@@ -252,7 +262,6 @@ Connection* json_to_connection(cJSON *connection_json) {
             cJSON *neighbor_json = cJSON_GetArrayItem(neighbors_json, j);
             Connection_point *neighbour = array_get(connection->points, neighbor_json->valueint);
             if (point < neighbour) {
-                printf("point < neighbour\n");
                 add_connection_link(point, neighbour);
             }
         }

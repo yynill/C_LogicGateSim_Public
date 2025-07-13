@@ -944,10 +944,6 @@ void delete_selected() {
 }
 
 void handle_group_nodes() {
-
-
-    printf("🟡group node\n");
-
     int num_inputs = 0;
     int num_outputs = 0;
 
@@ -970,9 +966,6 @@ void handle_group_nodes() {
 
     DynamicArray *inputs = array_create_empty_with_size(num_inputs);
     DynamicArray *outputs = array_create_empty_with_size(num_outputs);
-
-    printf("num_inputs %d\n", num_inputs);
-    printf("num_outputs %d\n", num_outputs);
 
     Node *group_node = create_group_node(&pos, inputs, outputs, sim_state->popup_state->name_input.text, sim_state->selected_nodes, matching_connections, 1);
 
