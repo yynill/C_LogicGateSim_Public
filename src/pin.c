@@ -2,7 +2,7 @@
 #include "pin.h"
 #include "stdlib.h"
 
-int next_pin_id = 1;
+int next_pin_id = 0;
 
 Pin* create_pin(int x, int y, int ii, Node* parent_node, int id) {
     Pin* p = malloc(sizeof(Pin));
@@ -18,9 +18,14 @@ Pin* create_pin(int x, int y, int ii, Node* parent_node, int id) {
     if (id == -1) {
         p->id = next_pin_id++;
     } else {
-        p->id = id;
-        if (id >= next_pin_id) {
-            next_pin_id = id + 1;
+        if (find_pin_by_id(sim_state->nodes, id) == NULL){
+            p->id = id;
+            if (id >= next_pin_id) {
+                next_pin_id = id + 1;
+            }
+        }
+        else {
+            printf("📌 pin collision - wanted %d\n", id);
         }
     }
 
@@ -29,7 +34,8 @@ Pin* create_pin(int x, int y, int ii, Node* parent_node, int id) {
 
 Pin *find_pin_by_id(DynamicArray *nodes, int id) {
     assert(nodes != NULL);
-    assert(id < next_pin_id);
+
+    if (id >= next_pin_id) return NULL;
 
     for (int i = 0; i < nodes->size; i++) {
         Node *node = array_get(nodes, i);

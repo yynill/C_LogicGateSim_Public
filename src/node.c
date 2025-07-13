@@ -28,9 +28,11 @@ SDL_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const 
     return rect;
 }
 
-Node *create_node(int num_inputs, int num_outputs, Operation *op, SDL_Point *spawn_pos, const char *name) {
-    assert(num_inputs >= 0 && num_outputs >= 0);
+Node *create_node(DynamicArray* inputs, DynamicArray* ouptuts, Operation *op, SDL_Point *spawn_pos, const char *name) {
     assert(name != NULL);
+
+    int num_inputs = inputs->size;
+    int num_outputs = ouptuts->size;
 
     Node *node = malloc(sizeof(Node));
     if (!node) return NULL;
@@ -55,7 +57,8 @@ Node *create_node(int num_inputs, int num_outputs, Operation *op, SDL_Point *spa
     float start_y_inputs = (rect.h / 2.0f) - (total_inputs_height / 2.0f);
 
     for (int i = 0; i < num_inputs; i++) {
-        Pin *p = create_pin(-PIN_SIZE / 2, start_y_inputs + i * (PIN_SIZE + spacing), 1, node, -1);
+        int id = *(int *)array_get(inputs, i);
+        Pin *p = create_pin(-PIN_SIZE / 2, start_y_inputs + i * (PIN_SIZE + spacing), 1, node, id);
         array_add(node->inputs, p);
     }
 
@@ -63,7 +66,8 @@ Node *create_node(int num_inputs, int num_outputs, Operation *op, SDL_Point *spa
     float start_y_outputs = (rect.h / 2.0f) - (total_outputs_height / 2.0f);
 
     for (int i = 0; i < num_outputs; i++) {
-        Pin *p = create_pin(rect.w - PIN_SIZE / 2, start_y_outputs + i * (PIN_SIZE + spacing), 0, node, -1);
+        int id = *(int *)array_get(ouptuts, i);
+        Pin *p = create_pin(rect.w - PIN_SIZE / 2, start_y_outputs + i * (PIN_SIZE + spacing), 0, node, id);
         array_add(node->outputs, p);
     }
 
@@ -196,12 +200,12 @@ SDL_Point calculate_pos_from_outline_rect(SDL_Rect outline_rect, SDL_Rect node_r
     return pos;
 }
 
-Node *create_group_node(SimulationState *state, SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded) {
+Node *create_group_node(SimulationState *state, SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray* ouptuts, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded) {
     assert(sub_nodes != NULL);
     assert(sub_connections != NULL);
 
     char *name_copy = strdup(name);
-    Node *group_node = create_node(num_inputs, num_outputs, nullGate, spawn_pos, name_copy);
+    Node *group_node = create_node(inputs, ouptuts, nullGate, spawn_pos, name_copy);
 
     group_node->sub_nodes = array_create(8);
     group_node->sub_connections = array_create(8);
@@ -210,15 +214,33 @@ Node *create_group_node(SimulationState *state, SDL_Point *spawn_pos, int num_in
         Node *current = array_get(sub_nodes, i);
         Node *new = NULL;
         SDL_Point pos = {.x = current->rect.x, .y = current->rect.y};
+        DynamicArray *sub_node_inputs = array_create(1);
+        for (int j = 0; j < current->inputs->size; j++) {
+            Pin *pin = (Pin *)array_get(current->inputs, j);
+            int *id = malloc(sizeof(int));
+            *id = pin->id;
+            array_add(sub_node_inputs, id);
+        }
+        DynamicArray *sub_node_outputs = array_create(1);
+        for (int j = 0; j < current->outputs->size; j++) {
+            Pin *pin = (Pin *)array_get(current->outputs, j);
+            int *id = malloc(sizeof(int));
+            *id = pin->id;
+            array_add(sub_node_outputs, id);
+        }
 
         if (current->sub_nodes != NULL && current->sub_nodes->size > 0) {
-            new = create_group_node(state, &pos, current->inputs->size, current->outputs->size, current->name, current->sub_nodes, current->sub_connections, current->is_expanded);
+            new = create_group_node(state, &pos, sub_node_inputs, sub_node_outputs, current->name, current->sub_nodes, current->sub_connections, current->is_expanded);
         } else {
-            new = create_node(current->inputs->size, current->outputs->size, current->operation, &pos, current->name);
+            new = create_node(sub_node_inputs, sub_node_outputs, current->operation, &pos, current->name);
         }
 
         new->parent = group_node;
         array_add(group_node->sub_nodes, new);
+
+        array_free(sub_node_inputs);
+        array_free(sub_node_outputs);
+
     }
 
     for (int i = 0; i < sub_connections->size; i++) {
@@ -392,29 +414,31 @@ void print_node(Node *node) {
         printf("  This Node has a parent (%p): %s\n", (void *)node->parent, node->parent->name);
     }
 
-    // Inputs
     printf("  Inputs (%d):\n", node->inputs->size);
     for (int i = 0; i < node->inputs->size; i++) {
         Pin *pin = array_get(node->inputs, i);
-        printf("    Input %d (%p) -> State: %d | Pos: (%d, %d)\n",
-               i, (void *)pin, pin->state, pin->x, pin->y);
-        printf("        Connected, connections\n");
-        for (int i = 0; i < pin->connected_connections->size; i++) {
-            Connection *con = array_get(pin->connected_connections, i);
-            printf("        Con (%p)\n", (void*) con);
+        printf("    [Input %d]  Ptr: %p | ID: %d | State: %d | Pos: (%d, %d)\n",
+               i, (void *)pin, pin->id, pin->state, pin->x, pin->y);
+        if (pin->connected_connections && pin->connected_connections->size > 0) {
+            printf("      └─ Connected Connections (%d):\n", pin->connected_connections->size);
+            for (int j = 0; j < pin->connected_connections->size; j++) {
+                Connection *con = array_get(pin->connected_connections, j);
+                printf("          • Connection Ptr: %p\n", (void*)con);
+            }
         }
     }
 
-    // Outputs
     printf("  Outputs (%d):\n", node->outputs->size);
     for (int i = 0; i < node->outputs->size; i++) {
         Pin *pin = array_get(node->outputs, i);
-        printf("    Output %d (%p) -> State: %d | Pos: (%d, %d)\n",
-               i, (void *)pin, pin->state, pin->x, pin->y);
-        printf("        Connected, connections\n");
-        for (int i = 0; i < pin->connected_connections->size; i++) {
-            Connection *con = array_get(pin->connected_connections, i);
-            printf("        Con (%p)\n", (void*) con);
+        printf("    [Output %d] Ptr: %p | ID: %d | State: %d | Pos: (%d, %d)\n",
+               i, (void *)pin, pin->id, pin->state, pin->x, pin->y);
+        if (pin->connected_connections && pin->connected_connections->size > 0) {
+            printf("      └─ Connected Connections (%d):\n", pin->connected_connections->size);
+            for (int j = 0; j < pin->connected_connections->size; j++) {
+                Connection *con = array_get(pin->connected_connections, j);
+                printf("          • Connection Ptr: %p\n", (void*)con);
+            }
         }
     }
 

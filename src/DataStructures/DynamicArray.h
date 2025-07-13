@@ -12,6 +12,7 @@ typedef struct DynamicArray
 } DynamicArray;
 
 DynamicArray *array_create(int init_size);
+DynamicArray *array_create_empty_with_size(int size);
 void array_free(DynamicArray *arr);
 void array_clear(DynamicArray *arr);
 void array_add(DynamicArray *arr, void *element);

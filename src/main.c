@@ -1,41 +1,39 @@
 #include "main.h"
 
-#include "simulation.h"
-#include "input_handler.h"
-#include "renderer.h"
-#include <stdio.h>
+SimulationState *sim_state;
 
 int main() {
-    SimulationState *state = simulation_init();
+    sim_state = simulation_init();
     RenderContext *context = init_renderer();
 
-    if (!state || !context) {
+    if (!sim_state || !context) {
         printf("Failed to initialize simulation or renderer\n");
         return 1;
     }
 
-    while (state->is_running) {
+    while (sim_state->is_running) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            handle_input(state, &event);
+            handle_input(sim_state, &event);
         }
 
-        if (state->should_reset) {
-            simulation_cleanup(state);
-            state = simulation_init();
-            if (!state) {
+        if (sim_state->should_reset) {
+            simulation_cleanup(sim_state);
+            next_pin_id = 0;
+            sim_state = simulation_init();
+            if (!sim_state) {
                 printf("Failed to reinitialize simulation\n");
                 break;
             }
             continue;
         }
 
-        simulation_update(state);
-        render(context, state);
+        simulation_update(sim_state);
+        render(context, sim_state);
         SDL_Delay(FRAME_DELAY);
     }
 
-    simulation_cleanup(state);
+    simulation_cleanup(sim_state);
     cleanup_renderer(context);
     return 0;
 }

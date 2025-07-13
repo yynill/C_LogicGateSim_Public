@@ -432,7 +432,7 @@ DynamicArray* find_fully_selected_connections(DynamicArray *selected_connection_
 
         int *count_ptr = (int *)hashmap_get(selection_counts, parent);
         int count = count_ptr ? *count_ptr : 0;
-        
+
         int *new_count = malloc(sizeof(int));
         *new_count = count + 1;
         hashmap_put(selection_counts, parent, new_count);

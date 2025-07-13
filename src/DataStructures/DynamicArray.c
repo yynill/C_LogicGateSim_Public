@@ -21,6 +21,23 @@ DynamicArray *array_create(int init_capacity) {
     return new_array;
 }
 
+DynamicArray *array_create_empty_with_size(int size) {
+    DynamicArray * arr = array_create(1);
+    if (arr == NULL) return NULL;
+
+    for (int i = 0; i < size; i++) {
+        int* val = malloc(sizeof(int));
+        if (val == NULL) {
+            array_free(arr);
+            return NULL;
+        }
+        *val = -1;
+        array_add(arr, val);
+    }
+
+    return arr;
+}
+
 void array_free(DynamicArray *arr) {
     if (arr == NULL) return;
 

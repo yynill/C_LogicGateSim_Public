@@ -8,11 +8,20 @@
 #include "node.h"
 #include "connection.h"
 #include "operation.h"
+#include "simulation.h"
 #include <string.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
 
+cJSON *connection_to_json(Connection *con);
+cJSON *node_to_json(Node *node);
+
 void save_graph_to_json(SimulationState *state);
 void load_graph_from_json(SimulationState *state, void *function_data);
+
+// Helper functions for JSON parsing
+Operation* get_operation_from_string(const char *op_name);
+Node* json_to_node(SimulationState *state, cJSON *node_json);
+Connection* json_to_connection(SimulationState *state, cJSON *connection_json);
 
 #endif // FILEHANDLER_H

@@ -192,7 +192,13 @@ void add_node(SimulationState *state, void *function_data) {
         num_outputs = 0;
     }
 
-    array_add(state->nodes, create_node(num_inputs, num_outputs, op, &node_pos, button->name));
+    DynamicArray *inputs = array_create_empty_with_size(num_inputs);
+    DynamicArray *outputs = array_create_empty_with_size(num_outputs);
+
+    array_add(state->nodes, create_node(inputs, outputs, op, &node_pos, button->name));
+
+    array_free(inputs);
+    array_free(outputs);
 }
 
 void cut_connection(SimulationState *state) {
@@ -889,17 +895,21 @@ void handle_paste(SimulationState *state) {
     for (int i = 0; i < state->clipboard_nodes->size; i++) {
         Node *current = array_get(state->clipboard_nodes, i);
         SDL_Point pos = {.x = current->rect.x + 10, .y = current->rect.y + 10};
+        DynamicArray *inputs = array_create_empty_with_size(current->inputs->size);
+        DynamicArray *outputs = array_create_empty_with_size(current->outputs->size);
         Node *new;
 
         if (current->sub_nodes != NULL) {
-            new = create_group_node(state, &pos, current->inputs->size, current->outputs->size, current->name, current->sub_nodes, current->sub_connections, current->is_expanded);
+            new = create_group_node(state, &pos, inputs, outputs, current->name, current->sub_nodes, current->sub_connections, current->is_expanded);
         }
         else {
-            new = create_node(current->inputs->size, current->outputs->size, current->operation, &pos, current->name);
+            new = create_node(inputs, outputs, current->operation, &pos, current->name);
         }
 
         array_add(state->nodes, new);
         array_add(state->selected_nodes, new);
+        array_free(inputs);
+        array_free(outputs);
     }
 
     DynamicArray *matching_connections = find_fully_selected_connections(state->clipboard_connection_points);
@@ -950,6 +960,8 @@ void delete_selected(SimulationState *state) {
 void handle_group_nodes(SimulationState *state) {
     assert(state != NULL);
 
+    printf("🟡group node\n");
+
     int num_inputs = 0;
     int num_outputs = 0;
 
@@ -970,9 +982,18 @@ void handle_group_nodes(SimulationState *state) {
     SDL_Rect rect = calc_rect(&((SDL_Point){0, 0}), num_inputs, num_outputs, state->popup_state->name_input.text);
     SDL_Point pos = calculate_pos_from_outline_rect(outline_rect, rect);
 
-    Node *group_node = create_group_node(state, &pos, num_inputs, num_outputs, state->popup_state->name_input.text, state->selected_nodes, matching_connections, 1);
+    DynamicArray *inputs = array_create_empty_with_size(num_inputs);
+    DynamicArray *outputs = array_create_empty_with_size(num_outputs);
+
+    printf("num_inputs %d\n", num_inputs);
+    printf("num_outputs %d\n", num_outputs);
+
+    Node *group_node = create_group_node(state, &pos, inputs, outputs, state->popup_state->name_input.text, state->selected_nodes, matching_connections, 1);
+
     array_add(state->nodes, group_node);
     free(matching_connections);
+    array_free(inputs);
+    array_free(outputs);
 
     delete_selected(state);
 }
@@ -993,7 +1014,7 @@ void handle_l_pressed(SimulationState *state) {
     assert(state != NULL);
     state->popup_state = init_popupstate("Load JSON", null_function_wo_data);
 
-    DIR *dir = opendir("saved_states");
+    DIR *dir = opendir("circuit_files");
     if (dir != NULL) {
         struct dirent *entry;
 
