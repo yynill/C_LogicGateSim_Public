@@ -14,11 +14,11 @@ int main() {
     while (sim_state->is_running) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            handle_input(sim_state, &event);
+            handle_input(&event);
         }
 
         if (sim_state->should_reset) {
-            simulation_cleanup(sim_state);
+            simulation_cleanup();
             next_pin_id = 0;
             sim_state = simulation_init();
             if (!sim_state) {
@@ -28,12 +28,12 @@ int main() {
             continue;
         }
 
-        simulation_update(sim_state);
-        render(context, sim_state);
+        simulation_update();
+        render(context);
         SDL_Delay(FRAME_DELAY);
     }
 
-    simulation_cleanup(sim_state);
+    simulation_cleanup();
     cleanup_renderer(context);
     return 0;
 }

@@ -10,11 +10,11 @@
 
 #include <assert.h>
 
-void handle_input(SimulationState *state, SDL_Event *event);
+void handle_input(SDL_Event *event);
 
-void handle_mouse_button_down(SimulationState *state, SDL_Event *event);
-void handle_mouse_button_up(SimulationState *state, SDL_Event *event);
-void handle_mouse_motion(SimulationState *state, SDL_Event *event);
-void handle_mouse_wheel(SimulationState *state, SDL_Event *event);
+void handle_mouse_button_down(SDL_Event *event);
+void handle_mouse_button_up(SDL_Event *event);
+void handle_mouse_motion(SDL_Event *event);
+void handle_mouse_wheel(SDL_Event *event);
 
 #endif

@@ -12,9 +12,9 @@ typedef struct Button
     SDL_Rect rect;
     char *name;
     void *function_data;
-    void (*on_press)(SimulationState *state, void *function_data); // Function pointer for button press action
+    void (*on_press)(void *function_data);
 } Button;
 
-Button *create_button(SDL_Rect rect, char *name, void *function_data, void (*on_press)(SimulationState*, void*));
+Button *create_button(SDL_Rect rect, char *name, void *function_data, void (*on_press)(void*));
 
 #endif // Button_H

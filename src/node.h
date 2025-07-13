@@ -37,7 +37,7 @@ void move_group_node_pins(Node *node);
 void reshape_outline_box(Node *node);
 
 Node *create_node(DynamicArray* inputs, DynamicArray* ouptuts, Operation *op, SDL_Point *spawn_pos, const char *name);
-Node *create_group_node(SimulationState *state, SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray* ouptuts, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded);
+Node *create_group_node(SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray* ouptuts, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded);
 SDL_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_connections);
 SDL_Point calculate_pos_from_outline_rect(SDL_Rect outline_rect, SDL_Rect node_rect);
 SDL_Point *find_most_top_left(DynamicArray *nodes);

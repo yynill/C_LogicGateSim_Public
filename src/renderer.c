@@ -110,18 +110,17 @@ void cleanup_renderer(RenderContext *context)
     SDL_Quit();
 }
 
-void screen_to_world(SimulationState *state, int screen_x, int screen_y, float *world_x, float *world_y) {
-    *world_x = (screen_x / state->camera_zoom) + state->camera_x;
-    *world_y = (screen_y / state->camera_zoom) + state->camera_y;
+void screen_to_world(int screen_x, int screen_y, float *world_x, float *world_y) {
+    *world_x = (screen_x / sim_state->camera_zoom) + sim_state->camera_x;
+    *world_y = (screen_y / sim_state->camera_zoom) + sim_state->camera_y;
 }
 
-void world_to_screen(SimulationState *state, float world_x, float world_y, int *screen_x, int *screen_y) {
-    *screen_x = (int)((world_x - state->camera_x) * state->camera_zoom);
-    *screen_y = (int)((world_y - state->camera_y) * state->camera_zoom);
+void world_to_screen(float world_x, float world_y, int *screen_x, int *screen_y) {
+    *screen_x = (int)((world_x - sim_state->camera_x) * sim_state->camera_zoom);
+    *screen_y = (int)((world_y - sim_state->camera_y) * sim_state->camera_zoom);
 }
 
-void screen_rect_to_world(SimulationState *state, const SDL_Rect *screen, SDL_Rect *out_world) {
-    assert(state != NULL);
+void screen_rect_to_world(const SDL_Rect *screen, SDL_Rect *out_world) {
     assert(screen != NULL);
     assert(out_world != NULL);
 
@@ -129,10 +128,10 @@ void screen_rect_to_world(SimulationState *state, const SDL_Rect *screen, SDL_Re
     float world_x2, world_y2;
 
     // top left corner
-    screen_to_world(state, screen->x, screen->y, &world_x1, &world_y1);
+    screen_to_world(screen->x, screen->y, &world_x1, &world_y1);
 
     // botom right cornder
-    screen_to_world(state, screen->x + screen->w, screen->y + screen->h, &world_x2, &world_y2);
+    screen_to_world(screen->x + screen->w, screen->y + screen->h, &world_x2, &world_y2);
 
     out_world->x = (int)fminf(world_x1, world_x2);
     out_world->y = (int)fminf(world_y1, world_y2);
@@ -140,16 +139,15 @@ void screen_rect_to_world(SimulationState *state, const SDL_Rect *screen, SDL_Re
     out_world->h = (int)fabsf(world_y2 - world_y1);
 }
 
-void world_rect_to_screen(SimulationState *state, const SDL_Rect *world, SDL_Rect *out_screen) {
-    assert(state != NULL);
+void world_rect_to_screen(const SDL_Rect *world, SDL_Rect *out_screen) {
     assert(world != NULL);
     assert(out_screen != NULL);
 
     int screen_x1, screen_y1;
     int screen_x2, screen_y2;
 
-    world_to_screen(state, world->x, world->y, &screen_x1, &screen_y1);
-    world_to_screen(state, world->x + world->w, world->y + world->h, &screen_x2, &screen_y2);
+    world_to_screen(world->x, world->y, &screen_x1, &screen_y1);
+    world_to_screen(world->x + world->w, world->y + world->h, &screen_x2, &screen_y2);
 
     out_screen->x = fmin(screen_x1, screen_x2);
     out_screen->y = fmin(screen_y1, screen_y2);
@@ -255,7 +253,7 @@ void render_button(RenderContext *context, Button *button) {
     }
 }
 
-void render_knife_stroke(RenderContext *context, SimulationState *sim_state) {
+void render_knife_stroke(RenderContext *context) {
     assert(context != NULL);
     assert(sim_state != NULL);
     SDL_SetRenderDrawColor(context->renderer, 255, 255, 255, 255);
@@ -265,14 +263,14 @@ void render_knife_stroke(RenderContext *context, SimulationState *sim_state) {
         SDL_Point *p2 = array_get(sim_state->knife_stroke, i + 1);
 
         int x1, y1, x2, y2;
-        world_to_screen(sim_state, p1->x, p1->y, &x1, &y1);
-        world_to_screen(sim_state, p2->x, p2->y, &x2, &y2);
+        world_to_screen(p1->x, p1->y, &x1, &y1);
+        world_to_screen(p2->x, p2->y, &x2, &y2);
 
         SDL_RenderDrawLine(context->renderer, x1, y1, x2, y2);
     }
 }
 
-void render_selected_node_outline(RenderContext *context, Node *node, SimulationState *sim_state) {
+void render_selected_node_outline(RenderContext *context, Node *node) {
     assert(context != NULL);
     assert(node != NULL);
     assert(sim_state != NULL);
@@ -285,7 +283,7 @@ void render_selected_node_outline(RenderContext *context, Node *node, Simulation
     selection_rect.h += 4;
 
     int new_x, new_y;
-    world_to_screen(sim_state, selection_rect.x, selection_rect.y, &new_x, &new_y);
+    world_to_screen(selection_rect.x, selection_rect.y, &new_x, &new_y);
     int new_w = (int)(selection_rect.w * sim_state->camera_zoom);
     int new_h = (int)(selection_rect.h * sim_state->camera_zoom);
     SDL_Rect dest = {new_x, new_y, new_w, new_h};
@@ -294,14 +292,14 @@ void render_selected_node_outline(RenderContext *context, Node *node, Simulation
     SDL_RenderDrawRect(context->renderer, &dest);
 }
 
-void render_single_node(RenderContext *context, SimulationState *sim_state, Node *node) {
+void render_single_node(RenderContext *context, Node *node) {
     SDL_Rect node_rect = node->rect;
     if (sim_state->dragged_node != NULL && sim_state->dragged_node == node) {
-        render_selected_node_outline(context, node, sim_state);
+        render_selected_node_outline(context, node);
     }
 
     int new_x, new_y;
-    world_to_screen(sim_state, node_rect.x, node_rect.y, &new_x, &new_y);
+    world_to_screen(node_rect.x, node_rect.y, &new_x, &new_y);
     int new_w = (int)(node_rect.w * sim_state->camera_zoom);
     int new_h = (int)(node_rect.h * sim_state->camera_zoom);
     SDL_Rect dest = {new_x, new_y, new_w, new_h};
@@ -329,13 +327,13 @@ void render_single_node(RenderContext *context, SimulationState *sim_state, Node
     }
 
     SDL_SetTextureAlphaMod(context->circle_texture, 255);
-    render_pins(context, sim_state, node);
+    render_pins(context, node);
 
     if (node->operation != switchNode && node->operation != lightNode) {
         int text_width, text_height;
         if (TTF_SizeText(context->font, node->name, &text_width, &text_height) == 0) {
             int text_x, text_y;
-            world_to_screen(sim_state, node->rect.x, node->rect.y, &text_x, &text_y);
+            world_to_screen( node->rect.x, node->rect.y, &text_x, &text_y);
             text_x += (int)(((node->rect.w - text_width) * sim_state->camera_zoom) / 2);
             text_y += (int)(((node->rect.h - text_height) * sim_state->camera_zoom) / 2);
             render_text(context, node->name, text_x, text_y, NULL, sim_state->camera_zoom);
@@ -345,13 +343,13 @@ void render_single_node(RenderContext *context, SimulationState *sim_state, Node
     }
 }
 
-void render_pins(RenderContext *context, SimulationState *sim_state, Node *node) {
+void render_pins(RenderContext *context, Node *node) {
     int num_inputs = node->inputs->size;
     for (int i = 0; i < num_inputs; i++) {
         Pin *pin = array_get(node->inputs, i);
 
         SDL_Rect pin_rect;
-        world_to_screen(sim_state, node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
+        world_to_screen(node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
         pin_rect.w = (int)(PIN_SIZE * sim_state->camera_zoom);
         pin_rect.h = (int)(PIN_SIZE * sim_state->camera_zoom);
 
@@ -366,7 +364,7 @@ void render_pins(RenderContext *context, SimulationState *sim_state, Node *node)
         Pin *pin = array_get(node->outputs, i);
 
         SDL_Rect pin_rect;
-        world_to_screen(sim_state, node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
+        world_to_screen(node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
         pin_rect.w = (int)(PIN_SIZE * sim_state->camera_zoom);
         pin_rect.h = (int)(PIN_SIZE * sim_state->camera_zoom);
 
@@ -377,18 +375,18 @@ void render_pins(RenderContext *context, SimulationState *sim_state, Node *node)
     }
 }
 
-void render_node(RenderContext *context, SimulationState *sim_state, Node *node) {
+void render_node(RenderContext *context, Node *node) {
     assert(context != NULL);
     assert(node != NULL);
     assert(sim_state != NULL);
 
     if (node->sub_nodes == NULL) {
-        render_single_node(context, sim_state, node);
+        render_single_node(context, node);
         return;
     }
 
     if (!node->is_expanded) {
-        render_single_node(context, sim_state, node);
+        render_single_node(context, node);
         return;
     }
 
@@ -396,7 +394,7 @@ void render_node(RenderContext *context, SimulationState *sim_state, Node *node)
     SDL_Rect outline = node->outline_rect;
 
     int outline_screen_x, outline_screen_y;
-    world_to_screen(sim_state, outline.x, outline.y, &outline_screen_x, &outline_screen_y);
+    world_to_screen(outline.x, outline.y, &outline_screen_x, &outline_screen_y);
     int outline_screen_w = (int)(outline.w * sim_state->camera_zoom);
     int outline_screen_h = (int)(outline.h * sim_state->camera_zoom);
     SDL_Rect outline_screen_rect = {outline_screen_x, outline_screen_y, outline_screen_w, outline_screen_h};
@@ -404,7 +402,7 @@ void render_node(RenderContext *context, SimulationState *sim_state, Node *node)
     render_text(context, node->name, outline_screen_rect.x + 32 * sim_state->camera_zoom, outline_screen_rect.y - 32 * sim_state->camera_zoom, NULL, sim_state->camera_zoom * 1.3);
 
     SDL_Rect arrow_rect;
-    world_rect_to_screen(sim_state, &node->rect, &arrow_rect);
+    world_rect_to_screen(&node->rect, &arrow_rect);
 
     render_img(context, "/assets/images/4_arrows.png", &arrow_rect);
 
@@ -417,29 +415,29 @@ void render_node(RenderContext *context, SimulationState *sim_state, Node *node)
 
     for (int i = 0 ; i < node->sub_connections->size; i++){
         Connection *sub_con = array_get(node->sub_connections, i);
-        render_connection(context, sub_con, sim_state);
+        render_connection(context, sub_con);
     }
 
     for (int i = 0 ; i < node->sub_nodes->size; i++){
         Node *sub_node = array_get(node->sub_nodes, i);
-        render_node(context, sim_state, sub_node);
+        render_node(context, sub_node);
     }
 
     SDL_Rect screen_rect;
-    world_rect_to_screen(sim_state, &node->close_btn->rect, &screen_rect);
+    world_rect_to_screen(&node->close_btn->rect, &screen_rect);
 
     Button screen_button = *node->close_btn;
     screen_button.rect = screen_rect;
 
     render_button(context, &screen_button);
-    render_pins(context, sim_state, node);
+    render_pins(context, node);
 }
 
-void render_connection_dragging(RenderContext *context, SimulationState *sim_state) {
+void render_connection_dragging(RenderContext *context) {
     SDL_SetRenderDrawColor(context->renderer, 0, 0, 30, 255);
 
-    render_connection_branch(sim_state, context, sim_state->new_connection);
-    render_connection_points(sim_state, context, sim_state->new_connection);
+    render_connection_branch(context, sim_state->new_connection);
+    render_connection_points(context, sim_state->new_connection);
 
     int thickness = (int)(4 * sim_state->camera_zoom);
     for (int t = -thickness / 2; t <= thickness / 2; t++) {
@@ -448,7 +446,7 @@ void render_connection_dragging(RenderContext *context, SimulationState *sim_sta
     }
 }
 
-void render_connection(RenderContext *context, Connection *con, SimulationState *sim_state) {
+void render_connection(RenderContext *context, Connection *con) {
     assert(context != NULL);
     assert(con != NULL);
 
@@ -458,23 +456,23 @@ void render_connection(RenderContext *context, Connection *con, SimulationState 
         SDL_SetRenderDrawColor(context->renderer, 0, 0, 30, 255);
     }
 
-    render_connection_branch(sim_state, context, con);
-    render_connection_points(sim_state, context, con);
+    render_connection_branch(context, con);
+    render_connection_points(context, con);
 }
 
-void render_connection_branch(SimulationState *sim_state, RenderContext *context, Connection *con) {
+void render_connection_branch(RenderContext *context, Connection *con) {
     int thickness = (int)(4 * sim_state->camera_zoom);
     for (int i = 0; i < con->points->size; i++) {
         Connection_point *p1 = array_get(con->points, i);
         int sx1, sy1;
-        world_to_screen(sim_state, p1->x, p1->y, &sx1, &sy1);
+        world_to_screen(p1->x, p1->y, &sx1, &sy1);
 
         for (int j = 0; j < p1->neighbors->size; j++) {
             Connection_point *p2 = array_get(p1->neighbors, j);
 
             if (p1 < p2) {
                 int sx2, sy2;
-                world_to_screen(sim_state, p2->x, p2->y, &sx2, &sy2);
+                world_to_screen(p2->x, p2->y, &sx2, &sy2);
 
                 for (int t = -thickness / 2; t <= thickness / 2; t++) {
                     SDL_RenderDrawLine(context->renderer, sx1, sy1 + t, sx2, sy2 + t);
@@ -485,12 +483,12 @@ void render_connection_branch(SimulationState *sim_state, RenderContext *context
     }
 }
 
-void render_connection_points(SimulationState *sim_state, RenderContext *context, Connection *con) {
+void render_connection_points(RenderContext *context, Connection *con) {
     for (int i = 0; i < con->points->size; i++) {
         Connection_point *p = array_get(con->points, i);
 
         int sx, sy;
-        world_to_screen(sim_state, p->x, p->y, &sx, &sy);
+        world_to_screen(p->x, p->y, &sx, &sy);
 
         SDL_Rect pin_rect;
         int pin_size = (int)(8 * sim_state->camera_zoom);
@@ -514,7 +512,7 @@ void render_connection_points(SimulationState *sim_state, RenderContext *context
     }
 }
 
-void render_selection_box(RenderContext *context, SimulationState *sim_state) {
+void render_selection_box(RenderContext *context) {
     assert(context != NULL);
     assert(sim_state != NULL);
 
@@ -538,7 +536,7 @@ void render_text_input(RenderContext *context, TextInput *input) {
     }
 }
 
-void render_popup(RenderContext *context, SimulationState *sim_state) {
+void render_popup(RenderContext *context) {
     assert(context != NULL);
     assert(sim_state != NULL);
     assert(sim_state->popup_state != NULL);
@@ -569,7 +567,7 @@ void render_popup(RenderContext *context, SimulationState *sim_state) {
     render_button(context, pop_state->esc_button);
 }
 
-void render(RenderContext *context, SimulationState *sim_state)
+void render(RenderContext *context)
 {
     assert(context != NULL);
     assert(sim_state != NULL);
@@ -578,14 +576,14 @@ void render(RenderContext *context, SimulationState *sim_state)
 
     clear_screen(context);
 
-    render_knife_stroke(context, sim_state);
-    render_selection_box(context, sim_state);
+    render_knife_stroke(context);
+    render_selection_box(context);
 
     for (int i = 0; i < sim_state->connections->size; i++) {
         Connection *connection = array_get(sim_state->connections, i);
         assert(connection != NULL);
 
-        render_connection(context, connection, sim_state);
+        render_connection(context, connection);
     }
 
     Node *last_node = NULL;
@@ -598,18 +596,18 @@ void render(RenderContext *context, SimulationState *sim_state)
             last_node = node;
             continue;
         }
-        render_node(context, sim_state, node);
+        render_node(context, node);
     }
-    if (last_node != NULL) render_node(context, sim_state, last_node);
+    if (last_node != NULL) render_node(context, last_node);
 
     for (int i = 0; i < sim_state->selected_nodes->size; i++) {
         Node *node = array_get(sim_state->selected_nodes, i);
         assert(node != NULL);
 
-        render_selected_node_outline(context, node, sim_state);
+        render_selected_node_outline(context, node);
     }
 
-    if (sim_state->is_cable_dragging) render_connection_dragging(context, sim_state);
+    if (sim_state->is_cable_dragging) render_connection_dragging(context);
 
     render_top_bar(context);
     for (int i = 0; i < sim_state->buttons->size; i++) {
@@ -622,7 +620,7 @@ void render(RenderContext *context, SimulationState *sim_state)
         render_button(context, button);
     }
 
-    if (sim_state->popup_state != NULL) render_popup(context, sim_state);
+    if (sim_state->popup_state != NULL) render_popup(context);
 
     present_screen(context);
 }

@@ -16,7 +16,7 @@
 #define TOP_BAR_HEIGHT 48
 
 #define WINDOW_WIDTH 1200
-#define WINDOW_HEIGHT ((800) + TOP_BAR_HEIGHT) 
+#define WINDOW_HEIGHT ((800) + TOP_BAR_HEIGHT)
 
 #define NODE_WIDTH 78
 #define SMALL_NODE_WIDTH 54
@@ -46,16 +46,16 @@ void present_screen(RenderContext *context);
 void cleanup_renderer(RenderContext *context);
 void render_text(RenderContext *context, const char *text, int x, int y, SDL_Color *color, float zoom);
 void render_img(RenderContext *context, const char *path, SDL_Rect *rect) ;
-void render(RenderContext *context, SimulationState *sim_state);
-void render_popup(RenderContext *context, SimulationState *sim_state);
-void render_connection(RenderContext *context, Connection *con, SimulationState *sim_state);
-void render_connection_branch(SimulationState *sim_state, RenderContext *context, Connection *con);
-void render_connection_points(SimulationState *sim_state, RenderContext *context, Connection *con);
-void render_single_node(RenderContext *context, SimulationState *sim_state, Node *node);
-void render_pins(RenderContext *context, SimulationState *sim_state, Node *node);
+void render(RenderContext *context);
+void render_popup(RenderContext *context);
+void render_connection(RenderContext *context, Connection *con);
+void render_connection_branch(RenderContext *context, Connection *con);
+void render_connection_points(RenderContext *context, Connection *con);
+void render_single_node(RenderContext *context, Node *node);
+void render_pins(RenderContext *context, Node *node);
 
-void world_to_screen(SimulationState *state, float world_x, float world_y, int *screen_x, int *screen_y);
-void screen_to_world(SimulationState *state, int screen_x, int screen_y, float *world_x, float *world_y);
-void screen_rect_to_world(SimulationState *state, const SDL_Rect *screen, SDL_Rect *out_world);
+void world_to_screen(float world_x, float world_y, int *screen_x, int *screen_y);
+void screen_to_world(int screen_x, int screen_y, float *world_x, float *world_y);
+void screen_rect_to_world(const SDL_Rect *screen, SDL_Rect *out_world);
 
 #endif // RENDERER_H

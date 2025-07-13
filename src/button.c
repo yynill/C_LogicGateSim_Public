@@ -1,7 +1,7 @@
 #include "button.h"
 
 
-Button *create_button(SDL_Rect rect, char *name, void *function_data, void (*on_press)(SimulationState*, void*)) {
+Button *create_button(SDL_Rect rect, char *name, void *function_data, void (*on_press)(void*)) {
     Button *btn = malloc(sizeof(Button));
     if (!btn) return NULL;
     btn->rect = rect;

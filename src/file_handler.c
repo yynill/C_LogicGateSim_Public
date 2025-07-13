@@ -1,10 +1,8 @@
 #include "file_handler.h"
 
-void save_graph_to_json(SimulationState *state) {
-    assert(state != NULL);
-
-    DynamicArray *nodes = state->nodes;
-    DynamicArray *connections = state->connections;
+void save_graph_to_json() {
+    DynamicArray *nodes = sim_state->nodes;
+    DynamicArray *connections = sim_state->connections;
 
     char filename[256];
     FILE *file;
@@ -26,7 +24,7 @@ void save_graph_to_json(SimulationState *state) {
     }
     cJSON_AddItemToObject(tree, "connections", connections_json);
 
-    snprintf(filename, sizeof(filename), "circuit_files/%s.json", state->popup_state->name_input.text);
+    snprintf(filename, sizeof(filename), "circuit_files/%s.json", sim_state->popup_state->name_input.text);
 
     char *string = cJSON_Print(tree);
     if (string == NULL) {
@@ -42,14 +40,12 @@ void save_graph_to_json(SimulationState *state) {
     free(string);
 }
 
-void load_graph_from_json(SimulationState *state, void *function_data) {
-    assert(state != NULL);
-
+void load_graph_from_json(void *function_data) {
     char filename[256];
     if (function_data != NULL) {
         snprintf(filename, sizeof(filename), "circuit_files/%s", (char*)function_data);
-    } else if (state->popup_state != NULL) {
-        snprintf(filename, sizeof(filename), "circuit_files/%s.json", state->popup_state->name_input.text);
+    } else if (sim_state->popup_state != NULL) {
+        snprintf(filename, sizeof(filename), "circuit_files/%s.json", sim_state->popup_state->name_input.text);
     } else {
         fprintf(stderr, "No filename provided for loading\n");
         return;
@@ -87,9 +83,9 @@ void load_graph_from_json(SimulationState *state, void *function_data) {
     if (nodes_array && cJSON_IsArray(nodes_array)) {
         for (int i = 0; i < cJSON_GetArraySize(nodes_array); i++) {
             cJSON *node_json = cJSON_GetArrayItem(nodes_array, i);
-            Node *node = json_to_node(state, node_json);
+            Node *node = json_to_node(node_json);
             if (node) {
-                array_add(state->nodes, node);
+                array_add(sim_state->nodes, node);
             }
         }
     }
@@ -98,19 +94,13 @@ void load_graph_from_json(SimulationState *state, void *function_data) {
     if (connections_array && cJSON_IsArray(connections_array)) {
         for (int i = 0; i < cJSON_GetArraySize(connections_array); i++) {
             cJSON *connection_json = cJSON_GetArrayItem(connections_array, i);
-            Connection *connection = json_to_connection(state, connection_json);
+            Connection *connection = json_to_connection(connection_json);
             if (connection) {
-                array_add(state->connections, connection);
+                array_add(sim_state->connections, connection);
                 propagate_state(connection);
                 update_connection_geometry(connection);
             }
         }
-    }
-
-    for (int i = 0; i < state->connections->size; i++) {
-        Connection *con = array_get(state->connections, i);
-        printf("🔵loop\n");
-        print_connection(con);
     }
 
     cJSON_Delete(root);
@@ -131,7 +121,7 @@ Operation* get_operation_from_string(const char *op_name) {
     return &nullGate;
 }
 
-Node* json_to_node(SimulationState *state, cJSON *node_json) {
+Node* json_to_node(cJSON *node_json) {
     if (!node_json || !cJSON_IsObject(node_json)) {
         return NULL;
     }
@@ -185,18 +175,18 @@ Node* json_to_node(SimulationState *state, cJSON *node_json) {
 
         for (int i = 0; i < sub_nodes_size; i++) {
             cJSON* sub_node_json = cJSON_GetArrayItem(sub_nodes_json, i);
-            Node *sub_node = json_to_node(state, sub_node_json);
+            Node *sub_node = json_to_node(sub_node_json);
             if (sub_node != NULL) array_add(sub_nodes, sub_node);
         }
 
         int sub_connection_size = cJSON_GetArraySize(sub_connections_json);
         for (int i = 0; i < sub_connection_size; i++) {
             cJSON *sub_con_json = cJSON_GetArrayItem(sub_connections_json, i);
-            Connection *sub_con = json_to_connection(state, sub_con_json);
+            Connection *sub_con = json_to_connection(sub_con_json);
             if (sub_con != NULL) array_add(sub_connections, sub_con);
         }
 
-        node = create_group_node(state, &pos, inputs, outputs, name, sub_nodes, sub_connections, is_expanded);
+        node = create_group_node(&pos, inputs, outputs, name, sub_nodes, sub_connections, is_expanded);
         array_free(sub_nodes);
         array_free(sub_connections);
     }
@@ -210,7 +200,7 @@ Node* json_to_node(SimulationState *state, cJSON *node_json) {
     return node;
 }
 
-Connection* json_to_connection(SimulationState *state, cJSON *connection_json) {
+Connection* json_to_connection(cJSON *connection_json) {
     if (!connection_json || !cJSON_IsObject(connection_json)) {
         return NULL;
     }
@@ -229,14 +219,14 @@ Connection* json_to_connection(SimulationState *state, cJSON *connection_json) {
     int input_pins_size = cJSON_GetArraySize(input_pins_json);
     for (int i = 0; i < input_pins_size; i++) {
         cJSON *pin_id_json = cJSON_GetArrayItem(input_pins_json, i);
-        Pin *pin = find_pin_by_id(state->nodes, pin_id_json->valueint);
+        Pin *pin = find_pin_by_id(sim_state->nodes, pin_id_json->valueint);
         array_add(connection->input_pins, pin);
     }
 
     int output_pins_size = cJSON_GetArraySize(output_pins_json);
     for (int i = 0; i < output_pins_size; i++) {
         cJSON *pin_id_json = cJSON_GetArrayItem(output_pins_json, i);
-        Pin *pin = find_pin_by_id(state->nodes, pin_id_json->valueint);
+        Pin *pin = find_pin_by_id(sim_state->nodes, pin_id_json->valueint);
         array_add(connection->output_pins, pin);
     }
 
@@ -248,7 +238,7 @@ Connection* json_to_connection(SimulationState *state, cJSON *connection_json) {
         cJSON *linked_pin_id_json = cJSON_GetObjectItem(point_json, "linked_pin_id");
         Pin *linked_pin = NULL;
         if (linked_pin_id_json->valueint != -1) {
-            linked_pin = find_pin_by_id(state->nodes, linked_pin_id_json->valueint);
+            linked_pin = find_pin_by_id(sim_state->nodes, linked_pin_id_json->valueint);
         }
         add_connection_point(connection, x_json->valueint, y_json->valueint, linked_pin);
     }
@@ -263,7 +253,7 @@ Connection* json_to_connection(SimulationState *state, cJSON *connection_json) {
             Connection_point *neighbour = array_get(connection->points, neighbor_json->valueint);
             if (point < neighbour) {
                 printf("point < neighbour\n");
-                add_connection_link(state, point, neighbour);
+                add_connection_link(point, neighbour);
             }
         }
     }

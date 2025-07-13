@@ -28,14 +28,14 @@ typedef struct PopupState {
     Button *enter_button;
     Button *esc_button;
 
-    void (*on_confirm)(SimulationState *state);
-    void (*on_cancel)(SimulationState *state);
+    void (*on_confirm)(void);
+    void (*on_cancel)(void);
 } PopupState;
 
-PopupState *init_popupstate(const char *title, void (*on_confirm)(SimulationState *));
+PopupState *init_popupstate(const char *title, void (*on_confirm)(void));
 PopupState *clear_popup(PopupState *popstate);
-void handle_popup_cancel(SimulationState *state);
-int try_handle_popup(SimulationState *state);
+void handle_popup_cancel();
+int try_handle_popup();
 void add_popup_button(PopupState *popstate, Button *button);
 void update_popup_layout(PopupState *popstate);
 

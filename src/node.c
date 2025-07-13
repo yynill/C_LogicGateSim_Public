@@ -124,8 +124,7 @@ void move_group_node_pins(Node *node) {
     }
 }
 
-void handle_close_group(SimulationState *state, void *function_data) {
-    assert(state != NULL);
+void handle_close_group(void *function_data) {
     assert(function_data != NULL);
 
     Node *node = (Node*)function_data;
@@ -200,7 +199,7 @@ SDL_Point calculate_pos_from_outline_rect(SDL_Rect outline_rect, SDL_Rect node_r
     return pos;
 }
 
-Node *create_group_node(SimulationState *state, SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray* ouptuts, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded) {
+Node *create_group_node(SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray* ouptuts, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded) {
     assert(sub_nodes != NULL);
     assert(sub_connections != NULL);
 
@@ -230,7 +229,7 @@ Node *create_group_node(SimulationState *state, SDL_Point *spawn_pos, DynamicArr
         }
 
         if (current->sub_nodes != NULL && current->sub_nodes->size > 0) {
-            new = create_group_node(state, &pos, sub_node_inputs, sub_node_outputs, current->name, current->sub_nodes, current->sub_connections, current->is_expanded);
+            new = create_group_node(&pos, sub_node_inputs, sub_node_outputs, current->name, current->sub_nodes, current->sub_connections, current->is_expanded);
         } else {
             new = create_node(sub_node_inputs, sub_node_outputs, current->operation, &pos, current->name);
         }
@@ -245,7 +244,7 @@ Node *create_group_node(SimulationState *state, SDL_Point *spawn_pos, DynamicArr
 
     for (int i = 0; i < sub_connections->size; i++) {
         Connection *original_conn = array_get(sub_connections, i);
-        Connection *new_con = copy_connection(state, original_conn, sub_nodes, group_node->sub_nodes, 0, 0);
+        Connection *new_con = copy_connection(original_conn, sub_nodes, group_node->sub_nodes, 0, 0);
 
         if (new_con != NULL) {
             array_add(group_node->sub_connections, new_con);

@@ -24,7 +24,7 @@ Connection *start_connection(Pin *pin) {
     return con;
 }
 
-void merge_connection(SimulationState *state,Connection *con1, Connection *con2) {
+void merge_connection(Connection *con1, Connection *con2) {
     for (int i = 0; i < con2->input_pins->size; i++) {
         Pin *pin = array_get(con2->input_pins, i);
         array_clear(pin->connected_connections);
@@ -45,12 +45,11 @@ void merge_connection(SimulationState *state,Connection *con1, Connection *con2)
     }
     array_move_all(con1->points, con2->points);
 
-    array_remove(state->connections, con2);
+    array_remove(sim_state->connections, con2);
     free(con2);
 }
 
-void unmerge_connection(SimulationState *state, Connection *con, Connection_point *point1, Connection_point *point2) {
-    assert(state != NULL);
+void unmerge_connection(Connection *con, Connection_point *point1, Connection_point *point2) {
     assert(con != NULL);
     assert(point1 != NULL);
     assert(point2 != NULL);
@@ -65,7 +64,7 @@ void unmerge_connection(SimulationState *state, Connection *con, Connection_poin
             Pin *pin = point2->linked_to_pin;
             array_remove(pin->connected_connections, con);
         }
-        array_remove(state->connections, con);
+        array_remove(sim_state->connections, con);
         free_connection(con);
         return;
     }
@@ -132,7 +131,7 @@ void unmerge_connection(SimulationState *state, Connection *con, Connection_poin
         }
     }
 
-    array_add(state->connections, new_con);
+    array_add(sim_state->connections, new_con);
 
     if(point1->neighbors->size == 0) {
         if(point1->linked_to_pin != NULL) {
@@ -182,12 +181,12 @@ void remove_connection_link(Connection_point *from, Connection_point *to) {
     array_remove(to->neighbors, from);
 }
 
-void add_connection_link(SimulationState *state, Connection_point *from, Connection_point *to) {
+void add_connection_link(Connection_point *from, Connection_point *to) {
     array_add(from->neighbors, to);
     array_add(to->neighbors, from);
 
     if (from->parent_connection != to->parent_connection) {
-        merge_connection(state, from->parent_connection, to->parent_connection);
+        merge_connection(from->parent_connection, to->parent_connection);
     }
 }
 
@@ -205,7 +204,7 @@ Connection_point *find_connection_point_with_pin(Connection *con, Pin *pin) {
     return NULL;
 }
 
-void delete_connection_branch(SimulationState *state, Connection_point *point, Pin* pin_of_point) {
+void delete_connection_branch(Connection_point *point, Pin* pin_of_point) {
     assert(point != NULL);
 
     Connection *con = point->parent_connection;
@@ -250,7 +249,7 @@ void delete_connection_branch(SimulationState *state, Connection_point *point, P
         }
 
         free_connection(con);
-        array_remove(state->connections, con);
+        array_remove(sim_state->connections, con);
     }
     else {
         for (int i = 0; i < points_to_remove->size; i++) {
@@ -457,8 +456,7 @@ DynamicArray* find_fully_selected_connections(DynamicArray *selected_connection_
     return fully_selected;
 }
 
-Connection* copy_connection(SimulationState *state, Connection *original_conn, DynamicArray *source_nodes, DynamicArray *target_nodes, float offset_x, float offset_y) {
-    assert(state != NULL);
+Connection* copy_connection(Connection *original_conn, DynamicArray *source_nodes, DynamicArray *target_nodes, float offset_x, float offset_y) {
     assert(original_conn != NULL);
     assert(source_nodes != NULL);
     assert(target_nodes != NULL);

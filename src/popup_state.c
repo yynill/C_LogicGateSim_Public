@@ -2,7 +2,7 @@
 
 #include "popup_state.h"
 
-PopupState *init_popupstate(const char *title, void (*on_confirm)(SimulationState *)) {
+PopupState *init_popupstate(const char *title, void (*on_confirm)(void)) {
     PopupState *pop_state = malloc(sizeof(PopupState));
     if (!pop_state) return NULL;
 
@@ -55,7 +55,7 @@ PopupState *init_popupstate(const char *title, void (*on_confirm)(SimulationStat
 
 void update_popup_layout(PopupState *popstate) {
     if (!popstate || !popstate->buttons || popstate->buttons->size == 0) return;
-    
+
     int button_count = popstate->buttons->size;
 
     int buttons_per_row = 3;
@@ -66,7 +66,7 @@ void update_popup_layout(PopupState *popstate) {
     int buttons_height = rows_needed * button_h + (rows_needed - 1) * PADDING;
 
     int popup_w = popstate->rect.w;
-    
+
     int title_area_height = 3 * PADDING;
     int name_input_height = 30 + PADDING;
     int buttons_area_height = buttons_height + PADDING;
@@ -102,7 +102,7 @@ void update_popup_layout(PopupState *popstate) {
             current_row++;
         }
     }
-    
+
     int control_button_h = popstate->enter_button->rect.h;
     int control_y = popup_y + popup_h - control_button_h - PADDING;
 
@@ -111,9 +111,9 @@ void update_popup_layout(PopupState *popstate) {
     popstate->name_input.rect.y = popup_y + title_area_height;
 }
 
-void handle_popup_cancel(SimulationState *state) {
-    if (state->popup_state) {
-        state->popup_state = clear_popup(state->popup_state);
+void handle_popup_cancel() {
+    if (sim_state->popup_state) {
+        sim_state->popup_state = clear_popup(sim_state->popup_state);
     }
 }
 
@@ -130,16 +130,15 @@ PopupState *clear_popup(PopupState *popstate) {
 
 void add_popup_button(PopupState *popstate, Button *button) {
     if (!popstate || !button) return;
-    
+
     array_add(popstate->buttons, button);
     update_popup_layout(popstate);
 }
 
-int try_handle_popup(SimulationState *state) {
-    assert(state != NULL);
-    Button *clicked_button = find_button_at_position(state->popup_state->buttons, state->mouse_x, state->mouse_y);
+int try_handle_popup() {
+    Button *clicked_button = find_button_at_position(sim_state->popup_state->buttons, sim_state->mouse_x, sim_state->mouse_y);
     if (clicked_button) {
-        clicked_button->on_press(state, clicked_button->function_data);
+        clicked_button->on_press(clicked_button->function_data);
         return 1;
     }
     return 0;
