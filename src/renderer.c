@@ -156,7 +156,7 @@ void world_rect_to_screen(const SDL_Rect *world, SDL_Rect *out_screen) {
 }
 
 
-void render_text(RenderContext *context, const char *text, int x, int y, SDL_Color *color, float zoom) {
+void render_text(RenderContext *context, char *text, int x, int y, SDL_Color *color, float zoom) {
     assert(context != NULL);
     assert(text != NULL);
     assert(context->font != NULL);

@@ -105,6 +105,7 @@ void handle_backspace();
 void handle_g_pressed();
 void handle_s_pressed();
 void handle_l_pressed();
+void handle_r_pressed();
 void handle_escape(void *function_data);
 void handle_enter(void *function_data);
 
@@ -114,9 +115,14 @@ void add_node(void *function_data);
 void cut_connection();
 void one_step(void *function_data);
 void toggle_play_pause(void *function_data);
-void reset_knife_stroke();
 void start_selection_box();
 void update_all_connections(DynamicArray *connections, DynamicArray *nodes);
+void rename_note();
+void delete_selected();
+void delete_node_and_connections(Node *node);
+Button *find_button_at_position(DynamicArray *buttons, int screen_x, int screen_y);
+Node *find_node_at_position(DynamicArray *nodes, float x, float y);
+void start_selection_box();
 int try_draw_selection_box();
 int try_handle_node_dragging(float world_x, float world_y);
 int try_hover_connection_point(float world_x, float world_y);
@@ -131,10 +137,5 @@ int try_add_connection_point();
 int try_handle_button_click();
 int try_handle_pin_click();
 int try_complete_connection();
-void delete_selected();
-void delete_node_and_connections(Node *node);
-Button *find_button_at_position(DynamicArray *buttons, int screen_x, int screen_y);
-Node *find_node_at_position(DynamicArray *nodes, float x, float y);
-void start_selection_box();
 
 #endif // SIMULATION_H

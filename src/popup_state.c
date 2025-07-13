@@ -2,7 +2,7 @@
 
 #include "popup_state.h"
 
-PopupState *init_popupstate(const char *title, void (*on_confirm)(void)) {
+PopupState *init_popupstate(char *title, void (*on_confirm)(void)) {
     PopupState *pop_state = malloc(sizeof(PopupState));
     if (!pop_state) return NULL;
 

@@ -19,7 +19,7 @@ typedef struct {
 } TextInput;
 
 typedef struct PopupState {
-    const char* title;
+    char* title;
     SDL_Rect rect;
 
     TextInput name_input;
@@ -32,7 +32,7 @@ typedef struct PopupState {
     void (*on_cancel)(void);
 } PopupState;
 
-PopupState *init_popupstate(const char *title, void (*on_confirm)(void));
+PopupState *init_popupstate(char *title, void (*on_confirm)(void));
 PopupState *clear_popup(PopupState *popstate);
 void handle_popup_cancel();
 int try_handle_popup();

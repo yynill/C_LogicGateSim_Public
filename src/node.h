@@ -15,7 +15,7 @@ typedef struct SimulationState SimulationState;
 typedef struct Button Button;
 
 typedef struct Node {
-    const char *name;
+    char *name;
     int is_expanded;
     SDL_Rect rect;
 

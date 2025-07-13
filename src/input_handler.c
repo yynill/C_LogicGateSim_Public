@@ -48,6 +48,9 @@ void handle_input(SDL_Event *event) {
             else if ((mod & KMOD_GUI) && event->key.keysym.sym == SDLK_l) {
                 handle_l_pressed();
             }
+            else if ((mod & KMOD_GUI) && event->key.keysym.sym == SDLK_r) {
+                handle_r_pressed();
+            }
             else if (event->key.keysym.sym == SDLK_BACKSPACE) {
                 handle_backspace();
             }

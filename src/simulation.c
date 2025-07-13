@@ -760,6 +760,21 @@ int try_handle_selection() {
     return 1;
 }
 
+void rename_note() {
+    if (sim_state->selected_nodes->size != 1) {
+        printf("❌ You can only rename 1 note at a time - select only 1\n");
+        return;
+    }
+
+    Node *note_to_rename = array_get(sim_state->selected_nodes, 0);
+    if (note_to_rename->name != NULL) {
+        free(note_to_rename->name);
+    }
+
+    note_to_rename->name = strdup(sim_state->popup_state->name_input.text);
+    return;
+}
+
 int try_handle_node_right_click() {
     float world_x, world_y;
     screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
@@ -769,10 +784,6 @@ int try_handle_node_right_click() {
 
     if (clicked_node->operation == switchNode) {
         toggle_switch_outputs(clicked_node);
-        return 1;
-    }
-    if (clicked_node->operation == noteNode) {
-        printf("// todo: rename note Node\n");
         return 1;
     }
     else if (clicked_node->sub_nodes != NULL) {
@@ -977,20 +988,19 @@ void handle_group_nodes() {
     delete_selected();
 }
 
+void handle_r_pressed() {
+    sim_state->popup_state = init_popupstate("Rename Note Node", rename_note);
+}
+
 void handle_g_pressed() {
-
-
     sim_state->popup_state = init_popupstate("Group Node", handle_group_nodes);
 }
 
 void handle_s_pressed() {
-
-
     sim_state->popup_state = init_popupstate("Save Selected to JSON", save_graph_to_json);
 }
 
 void handle_l_pressed() {
-
     sim_state->popup_state = init_popupstate("Load JSON", null_function_wo_data);
 
     DIR *dir = opendir("circuit_files");
@@ -1012,7 +1022,6 @@ void handle_l_pressed() {
 }
 
 void handle_escape(void *function_data) {
-
     (void)function_data;
 
     if(sim_state->popup_state != NULL) {
@@ -1021,7 +1030,6 @@ void handle_escape(void *function_data) {
 }
 
 void handle_enter(void *function_data) {
-
     (void)function_data;
 
     if(sim_state->popup_state != NULL) {
