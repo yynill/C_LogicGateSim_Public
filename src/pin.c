@@ -25,7 +25,8 @@ Pin* create_pin(int x, int y, int ii, Node* parent_node, int id) {
             }
         }
         else {
-            printf("📌 pin collision - wanted %d\n", id);
+            printf("📌 pin collision for id: %d\n", id);
+            p->id = id;
         }
     }
 

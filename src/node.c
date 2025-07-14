@@ -209,46 +209,18 @@ Node *create_group_node(SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray
     group_node->sub_nodes = array_create(8);
     group_node->sub_connections = array_create(8);
 
-    for (int i = 0; i < sub_nodes->size; i++) {
-        Node *current = array_get(sub_nodes, i);
-        Node *new = NULL;
-        SDL_Point pos = {.x = current->rect.x, .y = current->rect.y};
-        DynamicArray *sub_node_inputs = array_create(1);
-        for (int j = 0; j < current->inputs->size; j++) {
-            Pin *pin = (Pin *)array_get(current->inputs, j);
-            int *id = malloc(sizeof(int));
-            *id = pin->id;
-            array_add(sub_node_inputs, id);
-        }
-        DynamicArray *sub_node_outputs = array_create(1);
-        for (int j = 0; j < current->outputs->size; j++) {
-            Pin *pin = (Pin *)array_get(current->outputs, j);
-            int *id = malloc(sizeof(int));
-            *id = pin->id;
-            array_add(sub_node_outputs, id);
-        }
+    array_move_all(group_node->sub_nodes, sub_nodes);
+    array_move_all(group_node->sub_connections, sub_connections);
 
-        if (current->sub_nodes != NULL && current->sub_nodes->size > 0) {
-            new = create_group_node(&pos, sub_node_inputs, sub_node_outputs, current->name, current->sub_nodes, current->sub_connections, current->is_expanded);
-        } else {
-            new = create_node(sub_node_inputs, sub_node_outputs, current->operation, &pos, current->name);
-        }
-
-        new->parent = group_node;
-        array_add(group_node->sub_nodes, new);
-
-        array_free(sub_node_inputs);
-        array_free(sub_node_outputs);
-
+    for (int i = 0; i < group_node->sub_nodes->size; i++) {
+        Node *sub_node = array_get(group_node->sub_nodes, i);
+        sub_node->parent = group_node;
+        array_remove(sim_state->nodes, sub_node);
     }
 
-    for (int i = 0; i < sub_connections->size; i++) {
-        Connection *original_conn = array_get(sub_connections, i);
-        Connection *new_con = copy_connection(original_conn, sub_nodes, group_node->sub_nodes, 0, 0);
-
-        if (new_con != NULL) {
-            array_add(group_node->sub_connections, new_con);
-        }
+    for (int i = 0; i < group_node->sub_connections->size; i++) {
+        Connection *sub_con = array_get(group_node->sub_connections, i);
+        array_remove(sim_state->connections, sub_con);
     }
 
     group_node->is_expanded = is_expanded;

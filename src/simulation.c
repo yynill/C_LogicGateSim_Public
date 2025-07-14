@@ -988,8 +988,6 @@ void handle_group_nodes() {
     array_free(inputs);
     array_free(outputs);
 
-    delete_selected();
-
     gettimeofday(&end, NULL);
     long seconds = end.tv_sec - start.tv_sec;
     long useconds = end.tv_usec - start.tv_usec;
