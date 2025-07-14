@@ -66,15 +66,34 @@ RenderContext *init_renderer()
 
     TTF_SetFontHinting(context->font, TTF_HINTING_LIGHT);
 
-    context->circle_texture = IMG_LoadTexture(context->renderer, "assets/images/circle.png");
-    if (!context->circle_texture)
+    
+    context->image_cache.play_texture = IMG_LoadTexture(context->renderer, IMG_PATH_PLAY);
+    context->image_cache.pause_texture = IMG_LoadTexture(context->renderer, IMG_PATH_PAUSE);
+    context->image_cache.step_back_texture = IMG_LoadTexture(context->renderer, IMG_PATH_STEP_BACK);
+    context->image_cache.step_forth_texture = IMG_LoadTexture(context->renderer, IMG_PATH_STEP_FORTH);
+    context->image_cache.plus_texture = IMG_LoadTexture(context->renderer, IMG_PATH_PLUS);
+    context->image_cache.minus_texture = IMG_LoadTexture(context->renderer, IMG_PATH_MINUS);
+    context->image_cache.reload_texture = IMG_LoadTexture(context->renderer, IMG_PATH_RELOAD);
+    context->image_cache.download_texture = IMG_LoadTexture(context->renderer, IMG_PATH_DOWNLOAD);
+    context->image_cache.trash_texture = IMG_LoadTexture(context->renderer, IMG_PATH_TRASH);
+    context->image_cache.switch_on_texture = IMG_LoadTexture(context->renderer, IMG_PATH_SWITCH_ON);
+    context->image_cache.switch_off_texture = IMG_LoadTexture(context->renderer, IMG_PATH_SWITCH_OFF);
+    context->image_cache.light_on_texture = IMG_LoadTexture(context->renderer, IMG_PATH_LIGHT_ON);
+    context->image_cache.light_off_texture = IMG_LoadTexture(context->renderer, IMG_PATH_LIGHT_OFF);
+    context->image_cache.arrows_texture = IMG_LoadTexture(context->renderer, IMG_PATH_ARROWS);
+    context->image_cache.circle_texture = IMG_LoadTexture(context->renderer, IMG_PATH_CIRCLE);
+
+    if (!context->image_cache.play_texture || !context->image_cache.pause_texture ||
+        !context->image_cache.step_back_texture || !context->image_cache.step_forth_texture ||
+        !context->image_cache.plus_texture || !context->image_cache.minus_texture ||
+        !context->image_cache.reload_texture || !context->image_cache.download_texture ||
+        !context->image_cache.trash_texture || !context->image_cache.switch_on_texture ||
+        !context->image_cache.switch_off_texture || !context->image_cache.light_on_texture ||
+        !context->image_cache.light_off_texture || !context->image_cache.arrows_texture ||
+        !context->image_cache.circle_texture)
     {
-        printf("Failed to load circle texture! IMG_Error: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(context->renderer);
-        SDL_DestroyWindow(context->window);
-        free(context);
-        TTF_Quit();
-        SDL_Quit();
+        printf("Failed to load some textures! IMG_Error: %s\n", IMG_GetError());
+        cleanup_renderer(context);
         return NULL;
     }
 
@@ -104,7 +123,23 @@ void cleanup_renderer(RenderContext *context)
     TTF_CloseFont(context->font);
     SDL_DestroyRenderer(context->renderer);
     SDL_DestroyWindow(context->window);
-    SDL_DestroyTexture(context->circle_texture);
+    
+    SDL_DestroyTexture(context->image_cache.play_texture);
+    SDL_DestroyTexture(context->image_cache.pause_texture);
+    SDL_DestroyTexture(context->image_cache.step_back_texture);
+    SDL_DestroyTexture(context->image_cache.step_forth_texture);
+    SDL_DestroyTexture(context->image_cache.plus_texture);
+    SDL_DestroyTexture(context->image_cache.minus_texture);
+    SDL_DestroyTexture(context->image_cache.reload_texture);
+    SDL_DestroyTexture(context->image_cache.download_texture);
+    SDL_DestroyTexture(context->image_cache.trash_texture);
+    SDL_DestroyTexture(context->image_cache.switch_on_texture);
+    SDL_DestroyTexture(context->image_cache.switch_off_texture);
+    SDL_DestroyTexture(context->image_cache.light_on_texture);
+    SDL_DestroyTexture(context->image_cache.light_off_texture);
+    SDL_DestroyTexture(context->image_cache.arrows_texture);
+    SDL_DestroyTexture(context->image_cache.circle_texture);
+    
     free(context);
     TTF_Quit();
     SDL_Quit();
@@ -193,31 +228,13 @@ void render_text(RenderContext *context, char *text, int x, int y, SDL_Color *co
     SDL_FreeSurface(surface);
 }
 
-void render_img(RenderContext *context, const char *path, SDL_Rect *rect) {
+void render_img(RenderContext *context, SDL_Texture *texture, SDL_Rect *rect) {
     assert(context != NULL);
-    assert(path != NULL);
+    assert(texture != NULL);
     assert(rect != NULL);
     assert(rect->w > 0 && rect->h > 0 && "Image dimensions must be positive");
 
-    SDL_Surface *surface = IMG_Load(path);
-    if (!surface)
-    {
-        printf("Failed to load image %s! SDL_image Error: %s\n", path, IMG_GetError());
-        return;
-    }
-
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(context->renderer, surface);
-    if (!texture)
-    {
-        printf("Failed to create texture! SDL_Error: %s\n", SDL_GetError());
-        SDL_FreeSurface(surface);
-        return;
-    }
-
     SDL_RenderCopy(context->renderer, texture, NULL, rect);
-
-    SDL_DestroyTexture(texture);
-    SDL_FreeSurface(surface);
 }
 
 void render_top_bar(RenderContext *context) {
@@ -234,8 +251,16 @@ void render_button(RenderContext *context, Button *button) {
     assert(button->rect.w > 0 && button->rect.h > 0);
 
     int text_width, text_height;
-    if (strncmp(button->name, "/", 1) == 0) {
-        render_img(context, button->name, &button->rect);
+    if (strcmp(button->name, IMG_PATH_PLAY) == 0) {
+        render_img(context, context->image_cache.play_texture, &button->rect);
+    } else if (strcmp(button->name, IMG_PATH_PAUSE) == 0) {
+        render_img(context, context->image_cache.pause_texture, &button->rect);
+    } else if (strcmp(button->name, IMG_PATH_STEP_BACK) == 0) {
+        render_img(context, context->image_cache.step_back_texture, &button->rect);
+    } else if (strcmp(button->name, IMG_PATH_STEP_FORTH) == 0) {
+        render_img(context, context->image_cache.step_forth_texture, &button->rect);
+    } else if (strcmp(button->name, IMG_PATH_RELOAD) == 0) {
+        render_img(context, context->image_cache.reload_texture, &button->rect);
     }
     else {
         SDL_SetRenderDrawColor(context->renderer, 20, 20, 20, 255);
@@ -306,12 +331,12 @@ void render_single_node(RenderContext *context, Node *node) {
 
     if (node->operation == switchNode) {
         Pin *p = array_get(node->outputs, 0);
-        if (p->state) render_img(context, "/assets/images/switch_on.png", &dest);
-        else render_img(context, "/assets/images/switch_off.png", &dest);
+        if (p->state) render_img(context, context->image_cache.switch_on_texture, &dest);
+        else render_img(context, context->image_cache.switch_off_texture, &dest);
     } else if (node->operation == lightNode) {
         Pin *p = array_get(node->inputs, 0);
-        if (p->state) render_img(context, "/assets/images/light_on.png", &dest);
-        else render_img(context, "/assets/images/light_off.png", &dest);
+        if (p->state) render_img(context, context->image_cache.light_on_texture, &dest);
+        else render_img(context, context->image_cache.light_off_texture, &dest);
     } else {
         if(node->sub_nodes != NULL) SDL_SetRenderDrawColor(context->renderer, 255, 165, 0, 255);
         else if (node->operation == andGate) SDL_SetRenderDrawColor(context->renderer, 0, 128, 0, 255);
@@ -326,7 +351,7 @@ void render_single_node(RenderContext *context, Node *node) {
         SDL_RenderFillRect(context->renderer, &dest);
     }
 
-    SDL_SetTextureAlphaMod(context->circle_texture, 255);
+    SDL_SetTextureAlphaMod(context->image_cache.circle_texture, 255);
     render_pins(context, node);
 
     if (node->operation != switchNode && node->operation != lightNode) {
@@ -353,10 +378,10 @@ void render_pins(RenderContext *context, Node *node) {
         pin_rect.w = (int)(PIN_SIZE * sim_state->camera_zoom);
         pin_rect.h = (int)(PIN_SIZE * sim_state->camera_zoom);
 
-        if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->circle_texture, 255, 60, 60);
-        else if (pin->state) SDL_SetTextureColorMod(context->circle_texture, 0, 200, 103);
-        else SDL_SetTextureColorMod(context->circle_texture, 0, 0, 0);
-        SDL_RenderCopy(context->renderer, context->circle_texture, NULL, &pin_rect);
+        if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 60, 60);
+        else if (pin->state) SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 200, 103);
+        else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 0);
+        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_rect);
     }
 
     int num_outputs = node->outputs->size;
@@ -368,10 +393,10 @@ void render_pins(RenderContext *context, Node *node) {
         pin_rect.w = (int)(PIN_SIZE * sim_state->camera_zoom);
         pin_rect.h = (int)(PIN_SIZE * sim_state->camera_zoom);
 
-        if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->circle_texture, 255, 60, 60);
-        else if (pin->state) SDL_SetTextureColorMod(context->circle_texture, 0, 200, 103);
-        else SDL_SetTextureColorMod(context->circle_texture, 0, 0, 0);
-        SDL_RenderCopy(context->renderer, context->circle_texture, NULL, &pin_rect);
+        if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 60, 60);
+        else if (pin->state) SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 200, 103);
+        else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 0);
+        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_rect);
     }
 }
 
@@ -404,7 +429,7 @@ void render_node(RenderContext *context, Node *node) {
     SDL_Rect arrow_rect;
     world_rect_to_screen(&node->rect, &arrow_rect);
 
-    render_img(context, "/assets/images/4_arrows.png", &arrow_rect);
+    render_img(context, context->image_cache.arrows_texture, &arrow_rect);
 
     SDL_SetRenderDrawColor(context->renderer, 255, 165, 0, 128);
     SDL_SetRenderDrawBlendMode(context->renderer, SDL_BLENDMODE_BLEND);
@@ -500,18 +525,18 @@ void render_connection_points(RenderContext *context, Connection *con) {
         pin_rect.x = sx - pin_size / 2;
         pin_rect.y = sy - pin_size / 2;
 
-        if (sim_state->hovered_connection_point == p) SDL_SetTextureColorMod(context->circle_texture, 255, 255, 60);
-        else SDL_SetTextureColorMod(context->circle_texture, 0, 0, 30);
+        if (sim_state->hovered_connection_point == p) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 255, 60);
+        else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 30);
 
         for (int j = 0; j < sim_state->selected_connection_points->size; j++) {
             Connection_point *current = array_get(sim_state->selected_connection_points, j);
             if (current == p) {
-                SDL_SetTextureColorMod(context->circle_texture, 225, 225, 225);
+                SDL_SetTextureColorMod(context->image_cache.circle_texture, 225, 225, 225);
                 break;
             }
         }
 
-        SDL_RenderCopy(context->renderer, context->circle_texture, NULL, &pin_rect);
+        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_rect);
     }
 }
 
@@ -616,8 +641,8 @@ void render(RenderContext *context)
     for (int i = 0; i < sim_state->buttons->size; i++) {
         Button *button = array_get(sim_state->buttons, i);
 
-        if (strncmp(button->name, "/assets/images/play.png", 23) == 0 && !sim_state->is_paused) { button->name = "/assets/images/pause.png"; }
-        if (strncmp(button->name, "/assets/images/pause.png", 24) == 0 && sim_state->is_paused) { button->name = "/assets/images/play.png"; }
+        if (strncmp(button->name, IMG_PATH_PLAY, 23) == 0 && !sim_state->is_paused) { button->name = IMG_PATH_PAUSE; }
+        if (strncmp(button->name, IMG_PATH_PAUSE, 24) == 0 && sim_state->is_paused) { button->name = IMG_PATH_PLAY; }
 
         assert(button != NULL);
         render_button(context, button);

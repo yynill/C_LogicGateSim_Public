@@ -419,7 +419,7 @@ DynamicArray* find_fully_selected_connections(DynamicArray *selected_nodes) {
     DynamicArray *connections = array_create(4); // stores (Connection*)
     DynamicArray *counts = array_create(4);      // stores (int*)
 
-    DynamicArray *fully_selected = array_create(4); // Connections
+    DynamicArray *fully_selected = array_create(4);
 
     for (int i = 0; i < selected_nodes->size; i++) {
         Node *node = array_get(selected_nodes, i);

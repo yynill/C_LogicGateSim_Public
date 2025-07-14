@@ -36,7 +36,7 @@ int main() {
         render(context);
         pm_end_render_time(pm);
         pm_end_frame_time(pm);
-        // print_performance_metrics(pm, sim_state);
+        print_performance_metrics(pm, sim_state);
         SDL_Delay(FRAME_DELAY);
     }
 
