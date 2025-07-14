@@ -434,6 +434,9 @@ void render_node(RenderContext *context, Node *node) {
 }
 
 void render_connection_dragging(RenderContext *context) {
+    int world_x, world_y;
+    world_to_screen(sim_state->last_connection_point->x, sim_state->last_connection_point->y, &world_x, &world_y);
+
     SDL_SetRenderDrawColor(context->renderer, 0, 0, 30, 255);
 
     render_connection_branch(context, sim_state->new_connection);
@@ -441,8 +444,8 @@ void render_connection_dragging(RenderContext *context) {
 
     int thickness = (int)(4 * sim_state->camera_zoom);
     for (int t = -thickness / 2; t <= thickness / 2; t++) {
-        SDL_RenderDrawLine(context->renderer, sim_state->last_connection_point->x, sim_state->last_connection_point->y + t, sim_state->mouse_x, sim_state->mouse_y + t);
-        SDL_RenderDrawLine(context->renderer, sim_state->last_connection_point->x + t, sim_state->last_connection_point->y, sim_state->mouse_x + t, sim_state->mouse_y);
+        SDL_RenderDrawLine(context->renderer, world_x, world_y + t, sim_state->mouse_x, sim_state->mouse_y + t);
+        SDL_RenderDrawLine(context->renderer, world_x + t, world_y, sim_state->mouse_x + t, sim_state->mouse_y);
     }
 }
 
