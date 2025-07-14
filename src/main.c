@@ -5,6 +5,7 @@ SimulationState *sim_state;
 int main() {
     sim_state = simulation_init();
     RenderContext *context = init_renderer();
+    PerformanceMetrics *pm = init_performance_monitoring();
 
     if (!sim_state || !context) {
         printf("Failed to initialize simulation or renderer\n");
@@ -28,8 +29,15 @@ int main() {
             continue;
         }
 
+        pm_start_frame_time(pm);
         simulation_update();
+        pm_end_simulation_time(pm);
+        pm_start_render_time(pm);
         render(context);
+        pm_end_render_time(pm);
+        pm_end_frame_time(pm);
+        print_performance_metrics(pm, sim_state);
+        // print_memory_breakdown(sim_state);
         SDL_Delay(FRAME_DELAY);
     }
 

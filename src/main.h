@@ -5,6 +5,7 @@
 #include "simulation.h"
 #include "input_handler.h"
 #include "renderer.h"
+#include "performanceMonitor.h"
 #include <stdio.h>
 
 #define WINDOW_TITLE "Logic Gate Sim"
