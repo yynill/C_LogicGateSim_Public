@@ -43,7 +43,6 @@ typedef struct SimulationState {
     DynamicArray *selected_connection_points;
 
     DynamicArray *clipboard_nodes;
-    DynamicArray *clipboard_connection_points;
 
     int left_mouse_down;
     int right_mouse_down;

@@ -18,7 +18,6 @@ LDFLAGS = -L/opt/homebrew/opt/sdl2/lib -L/opt/homebrew/opt/sdl2_ttf/lib -L/opt/h
 # Main program configuration
 MAIN_SRC = src/main.c \
 		   src/DataStructures/DynamicArray.c \
-		   src/DataStructures/HashMap.c \
 		   src/cJSON/cJSON.c \
            src/simulation.c \
            src/input_handler.c \
@@ -52,4 +51,4 @@ $(MAIN_TARGET): $(MAIN_OBJ)
 
 # Clean up build artifacts
 clean:
-	rm -f $(MAIN_OBJ) $(MAIN_TARGET) 
+	rm -f $(MAIN_OBJ) $(MAIN_TARGET)

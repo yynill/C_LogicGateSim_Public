@@ -730,7 +730,6 @@ void delete_node_and_connections(Node *node) {
 }
 
 int try_handle_selection() {
-
     assert(sim_state->nodes != NULL);
 
     if (sim_state->is_selection_box_drawing == 0) return 0;
@@ -811,7 +810,6 @@ int try_add_connection_point() {
 }
 
 void process_left_click() {
-
     assert(sim_state->nodes != NULL);
     assert(sim_state->buttons != NULL);
 
@@ -830,7 +828,6 @@ void process_left_click() {
 }
 
 void process_right_click() {
-
     assert(sim_state->nodes != NULL);
 
     if (!sim_state->right_mouse_down) return;
@@ -843,7 +840,6 @@ void process_right_click() {
 }
 
 void process_mouse_motion() {
-
     assert(sim_state->nodes != NULL);
     assert(sim_state->buttons != NULL);
 
@@ -859,8 +855,6 @@ void process_mouse_motion() {
 }
 
 void process_right_mouse_up() {
-
-
     sim_state->is_connection_point_dragging = 0;
 
     if (!sim_state->is_cable_dragging) {
@@ -869,22 +863,18 @@ void process_right_mouse_up() {
 }
 
 void process_left_mouse_up() {
-
-
     if (try_handle_selection()) return;
     if (try_complete_connection()) return;
 }
 
 void handle_copy() {
-
-
     sim_state->clipboard_nodes = flat_copy(sim_state->selected_nodes);
-    sim_state->clipboard_connection_points = flat_copy(sim_state->selected_connection_points);
 }
 
 void handle_paste() {
-
-
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+    int num_nodes = sim_state->clipboard_nodes->size;
 
     sim_state->selected_nodes->size = 0;
     sim_state->selected_connection_points->size = 0;
@@ -909,7 +899,8 @@ void handle_paste() {
         array_free(outputs);
     }
 
-    DynamicArray *matching_connections = find_fully_selected_connections(sim_state->clipboard_connection_points);
+    DynamicArray *matching_connections = find_fully_selected_connections(sim_state->clipboard_nodes);
+    int num_connections = matching_connections->size;
 
     for (int i = 0; i < matching_connections->size; i++) {
         Connection *original_conn = array_get(matching_connections, i);
@@ -927,6 +918,12 @@ void handle_paste() {
         }
     }
     free(matching_connections);
+
+    gettimeofday(&end, NULL);
+    long seconds = end.tv_sec - start.tv_sec;
+    long useconds = end.tv_usec - start.tv_usec;
+    double mtime = ((seconds) * 1000.0 + useconds / 1000.0);
+    printf("🟠 handle_paste took %.3f ms for %d not nodes | %d connections\n", mtime, num_nodes, num_connections);
 }
 
 void handle_backspace() {
@@ -955,8 +952,13 @@ void delete_selected() {
 }
 
 void handle_group_nodes() {
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+
     int num_inputs = 0;
     int num_outputs = 0;
+
+    int num_nodes = sim_state->selected_nodes->size;
 
     for (int i = 0; i < sim_state->selected_nodes->size; i++) {
         Node *node = array_get(sim_state->selected_nodes, i);
@@ -969,7 +971,8 @@ void handle_group_nodes() {
         return;
     }
 
-    DynamicArray *matching_connections = find_fully_selected_connections(sim_state->selected_connection_points);
+    DynamicArray *matching_connections = find_fully_selected_connections(sim_state->selected_nodes);
+    int num_connections = matching_connections->size;
 
     SDL_Rect outline_rect = calculate_outline_rect(sim_state->selected_nodes, matching_connections);
     SDL_Rect rect = calc_rect(&((SDL_Point){0, 0}), num_inputs, num_outputs, sim_state->popup_state->name_input.text);
@@ -986,6 +989,12 @@ void handle_group_nodes() {
     array_free(outputs);
 
     delete_selected();
+
+    gettimeofday(&end, NULL);
+    long seconds = end.tv_sec - start.tv_sec;
+    long useconds = end.tv_usec - start.tv_usec;
+    double mtime = ((seconds) * 1000.0 + useconds / 1000.0);
+    printf("🟠 handle_group_nodes took %.3f ms for %d nodes | %d connections\n", mtime, num_nodes, num_connections);
 }
 
 void handle_r_pressed() {

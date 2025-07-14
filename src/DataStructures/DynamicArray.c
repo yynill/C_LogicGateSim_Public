@@ -144,6 +144,17 @@ int array_contains(DynamicArray *array, void *element) {
     return 0;
 }
 
+int array_get_index(DynamicArray *array, void *element) {
+    if (array == NULL || element == NULL) return 0;
+
+    for (int i = 0; i < array->size; i++) {
+        if (array->data[i] == element) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 void array_print_stats(DynamicArray *arr, const char *label) {
     size_t element_size = sizeof(void*);
     size_t elements_in_array = arr->size;

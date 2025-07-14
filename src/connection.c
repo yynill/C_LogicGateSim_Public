@@ -413,46 +413,61 @@ void free_connection(Connection *con) {
     con = NULL;
 }
 
-DynamicArray* find_fully_selected_connections(DynamicArray *selected_connection_points) {
-    assert(selected_connection_points != NULL);
+DynamicArray* find_fully_selected_connections(DynamicArray *selected_nodes) {
+    assert(selected_nodes != NULL);
 
-    DynamicArray *parent_connections = array_create(16);
-    DynamicArray *fully_selected = array_create(16);
-    HashMap *selection_counts = hashmap_create(8);
+    DynamicArray *connections = array_create(4); // stores (Connection*)
+    DynamicArray *counts = array_create(4);      // stores (int*)
 
-    for (int i = 0; i < selected_connection_points->size; i++) {
-        Connection_point *point = array_get(selected_connection_points, i);
-        if (!array_contains(parent_connections, point->parent_connection)) { array_add(parent_connections, point->parent_connection); }
-    }
+    DynamicArray *fully_selected = array_create(4); // Connections
 
-    for (int i = 0; i < selected_connection_points->size; i++) {
-        Connection_point *point = (Connection_point *)array_get(selected_connection_points, i);
-        Connection *parent = point->parent_connection;
-
-        int *count_ptr = (int *)hashmap_get(selection_counts, parent);
-        int count = count_ptr ? *count_ptr : 0;
-
-        int *new_count = malloc(sizeof(int));
-        *new_count = count + 1;
-        hashmap_put(selection_counts, parent, new_count);
-    }
-
-    for (int i = 0; i < parent_connections->size; i++) {
-        Connection *conn = (Connection *)array_get(parent_connections, i);
-        int *count_ptr = (int *)hashmap_get(selection_counts, conn);
-        int selected_count = count_ptr ? *count_ptr : 0;
-
-        if (selected_count == conn->points->size && conn->points->size > 0) {
-            array_add(fully_selected, conn);
+    for (int i = 0; i < selected_nodes->size; i++) {
+        Node *node = array_get(selected_nodes, i);
+        for (int j = 0; j < node->inputs->size; j++) {
+            Pin *pin = array_get(node->inputs, j);
+            for (int k = 0; k < pin->connected_connections->size; k++) {
+                Connection *con = array_get(pin->connected_connections, k);
+                int index = array_get_index(connections, con);
+                if (index != -1) {
+                    int *count_ptr = array_get(counts, index);
+                    (*count_ptr)++;
+                } else {
+                    array_add(connections, con);
+                    int *new_count = malloc(sizeof(int));
+                    *new_count = 1;
+                    array_add(counts, new_count);
+                }
+            }
+        }
+        for (int j = 0; j < node->outputs->size; j++) {
+            Pin *pin = array_get(node->outputs, j);
+            for (int k = 0; k < pin->connected_connections->size; k++) {
+                Connection *con = array_get(pin->connected_connections, k);
+                int index = array_get_index(connections, con);
+                if (index != -1) {
+                    int *count_ptr = array_get(counts, index);
+                    (*count_ptr)++;
+                } else {
+                    array_add(connections, con);
+                    int *new_count = malloc(sizeof(int));
+                    *new_count = 1;
+                    array_add(counts, new_count);
+                }
+            }
         }
     }
 
-    for (int i = 0; i < selection_counts->capacity; i++) {
-        if (selection_counts->entries[i].occupied) {
-            free(selection_counts->entries[i].value);
+    for (int i = 0; i < connections->size; i++) {
+        Connection *con = array_get(connections, i);
+        int *count = array_get(counts, i);
+        if (con->input_pins->size + con->output_pins->size == *(int *)count) {
+            array_add(fully_selected, con);
         }
     }
-    hashmap_free(selection_counts);
+
+    free(connections);
+    array_free(counts);
+
     return fully_selected;
 }
 

@@ -6,7 +6,6 @@
 #include <SDL2/SDL.h>
 #include <assert.h>
 #include "DataStructures/DynamicArray.h"
-#include "DataStructures/HashMap.h"
 #include "node.h"
 #include "renderer.h"
 
@@ -44,7 +43,7 @@ void propagate_state(Connection *con);
 void update_connection_geometry(Connection *con);
 void unmerge_connection(Connection *con, Connection_point *point1, Connection_point *point2);
 
-DynamicArray* find_fully_selected_connections(DynamicArray *selected_connection_points);
+DynamicArray* find_fully_selected_connections(DynamicArray *selected_nodes);
 Connection* copy_connection(Connection *original_conn, DynamicArray *source_nodes, DynamicArray *target_nodes, float offset_x, float offset_y);
 
 void print_connection(Connection *con);
