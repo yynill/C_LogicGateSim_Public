@@ -49,6 +49,6 @@ void pm_end_frame_time(PerformanceMetrics *pm);
 void pm_end_render_time(PerformanceMetrics *pm);
 void pm_end_simulation_time(PerformanceMetrics *pm);
 void print_performance_metrics(PerformanceMetrics *pm, SimulationState *sim_state);
-void print_memory_breakdown(SimulationState *sim_state);
+int count_nodes(DynamicArray* nodes, int *con_sum);
 
 #endif // PERFORMANCE_MONITOR_H

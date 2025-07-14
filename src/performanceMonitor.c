@@ -97,33 +97,38 @@ void pm_end_frame_time(PerformanceMetrics *pm) {
 void print_performance_metrics(PerformanceMetrics *pm, SimulationState *sim_state) {
     if (pm == NULL || sim_state == NULL) return;
 
+    int con_sum = sim_state->connections->size;
+    int node_sum = count_nodes(sim_state->nodes, &con_sum);
+
     printf("=======PERFORMANCE METRICS=======\n");
-    if (pm->fps > 30) {
-        printf("\033[32mFPS: %.1f\033[0m\n", pm->fps);
-    } else if (pm->fps > 15) {
-        printf("\033[33mFPS: %.1f\033[0m\n", pm->fps);
-    } else {
-        printf("\033[31mFPS: %.1f\033[0m\n", pm->fps);
-    }
-    printf("Frame time: %.5f ms\n", pm->frame_time);
-    printf("Frame count: %d\n", pm->max_frame_count);
-    printf("Render time: %.5f ms (%.2f%%)\n", pm->render_time, pm->render_time_percentage);
-    printf("Simulation time: %.5f ms (%.2f%%)\n", pm->simulation_time, pm->simulation_time_percentage);
+    if (pm->fps > 30)      printf("\033[32mFPS: %.1f\033[0m\n", pm->fps);
+    else if (pm->fps > 15) printf("\033[33mFPS: %.1f\033[0m\n", pm->fps);
+    else                   printf("\033[31mFPS: %.1f\033[0m\n", pm->fps);
+    printf("Frame time:        %.5f ms\n", pm->frame_time);
+    printf("Render time:       %.5f ms (%.2f%%)\n", pm->render_time, pm->render_time_percentage);
+    printf("Simulation time:   %.5f ms (%.2f%%)\n", pm->simulation_time, pm->simulation_time_percentage);
+    printf("Nodes:             %d\n", node_sum);
+    printf("Connections:       %d\n", con_sum);
+
 }
 
-void print_memory_breakdown(SimulationState *sim_state) {
-    if (sim_state == NULL) return;
+int count_nodes(DynamicArray* nodes, int *con_sum) {
+    int node_sum = 0;
 
-    printf("// todo: print memory breakdown\n");
+    for (int i = 0; i < nodes->size; i++) {
+        Node *node = array_get(nodes, i);
+        if (node->sub_nodes == NULL) {}
+        else {
+            *con_sum += node->sub_connections->size;
+            node_sum += count_nodes(node->sub_nodes, con_sum);
+        }
+        node_sum++;
+    }
+
+    return node_sum;
 }
 
 /*
-
-Performance Metrics Display
-  - Number of nodes being rendered
-  - Number of connections being rendered
-  - Number of nodes being simulated
-  - Memory usage (nodes, connections, textures)
 
 Debug Overlays
   - Show render calls per frame
