@@ -66,7 +66,7 @@ RenderContext *init_renderer()
 
     TTF_SetFontHinting(context->font, TTF_HINTING_LIGHT);
 
-    
+
     context->image_cache.play_texture = IMG_LoadTexture(context->renderer, IMG_PATH_PLAY);
     context->image_cache.pause_texture = IMG_LoadTexture(context->renderer, IMG_PATH_PAUSE);
     context->image_cache.step_back_texture = IMG_LoadTexture(context->renderer, IMG_PATH_STEP_BACK);
@@ -83,6 +83,17 @@ RenderContext *init_renderer()
     context->image_cache.arrows_texture = IMG_LoadTexture(context->renderer, IMG_PATH_ARROWS);
     context->image_cache.circle_texture = IMG_LoadTexture(context->renderer, IMG_PATH_CIRCLE);
 
+    context->text_cache.not_texture = text_to_texture(context, "NOT", NULL);
+    context->text_cache.and_texture = text_to_texture(context, "AND", NULL);
+    context->text_cache.or_texture = text_to_texture(context, "OR", NULL);
+    context->text_cache.nor_texture = text_to_texture(context, "NOR", NULL);
+    context->text_cache.nand_texture = text_to_texture(context, "NAND", NULL);
+    context->text_cache.xor_texture = text_to_texture(context, "XOR", NULL);
+    context->text_cache.xnor_texture = text_to_texture(context, "XNOR", NULL);
+    context->text_cache.switch_texture = text_to_texture(context, "SWITCH", NULL);
+    context->text_cache.light_texture = text_to_texture(context, "LIGHT", NULL);
+    context->text_cache.note_texture = text_to_texture(context, "NOTE", NULL);
+
     if (!context->image_cache.play_texture || !context->image_cache.pause_texture ||
         !context->image_cache.step_back_texture || !context->image_cache.step_forth_texture ||
         !context->image_cache.plus_texture || !context->image_cache.minus_texture ||
@@ -90,7 +101,12 @@ RenderContext *init_renderer()
         !context->image_cache.trash_texture || !context->image_cache.switch_on_texture ||
         !context->image_cache.switch_off_texture || !context->image_cache.light_on_texture ||
         !context->image_cache.light_off_texture || !context->image_cache.arrows_texture ||
-        !context->image_cache.circle_texture)
+        !context->image_cache.circle_texture || !context->text_cache.not_texture ||
+        !context->text_cache.and_texture || !context->text_cache.or_texture ||
+        !context->text_cache.nor_texture || !context->text_cache.nand_texture ||
+        !context->text_cache.xor_texture || !context->text_cache.xnor_texture ||
+        !context->text_cache.switch_texture || !context->text_cache.light_texture ||
+        !context->text_cache.note_texture )
     {
         printf("Failed to load some textures! IMG_Error: %s\n", IMG_GetError());
         cleanup_renderer(context);
@@ -123,7 +139,7 @@ void cleanup_renderer(RenderContext *context)
     TTF_CloseFont(context->font);
     SDL_DestroyRenderer(context->renderer);
     SDL_DestroyWindow(context->window);
-    
+
     SDL_DestroyTexture(context->image_cache.play_texture);
     SDL_DestroyTexture(context->image_cache.pause_texture);
     SDL_DestroyTexture(context->image_cache.step_back_texture);
@@ -139,7 +155,7 @@ void cleanup_renderer(RenderContext *context)
     SDL_DestroyTexture(context->image_cache.light_off_texture);
     SDL_DestroyTexture(context->image_cache.arrows_texture);
     SDL_DestroyTexture(context->image_cache.circle_texture);
-    
+
     free(context);
     TTF_Quit();
     SDL_Quit();
@@ -190,13 +206,41 @@ void world_rect_to_screen(const SDL_Rect *world, SDL_Rect *out_screen) {
     out_screen->h = abs(screen_y2 - screen_y1);
 }
 
+TextChacheElement *text_to_texture(RenderContext *context, char *text, SDL_Color *color) {
+    TextChacheElement *tce= malloc(sizeof(TextChacheElement));
+
+    if (color == NULL) {
+        SDL_Color default_color = {255, 255, 255, 255};
+        color = &default_color;
+    }
+
+    SDL_Surface *surface = TTF_RenderText_Blended(context->font, text, *color);
+    if (!surface) {
+        printf("Failed to render text! TTF_Error: %s\n", TTF_GetError());
+        return NULL;
+    }
+
+    tce->texture  = SDL_CreateTextureFromSurface(context->renderer, surface);
+    if (!tce->texture) {
+        printf("Failed to create texture! SDL_Error: %s\n", SDL_GetError());
+        SDL_FreeSurface(surface);
+        return NULL;
+    }
+
+    tce->rect = malloc(sizeof(SDL_Rect));
+    tce->rect->x = 0;
+    tce->rect->y = 0;
+    tce->rect->w = (int)(surface->w);
+    tce->rect->h = (int)(surface->h);
+
+    return tce;
+}
 
 void render_text(RenderContext *context, char *text, int x, int y, SDL_Color *color, float zoom) {
     assert(context != NULL);
     assert(text != NULL);
     assert(context->font != NULL);
 
-    if (zoom < 0.8f) return;
     if (color == NULL) {
         SDL_Color default_color = {255, 255, 255, 255};
         color = &default_color;
@@ -248,7 +292,6 @@ void render_button(RenderContext *context, Button *button) {
     assert(context != NULL);
     assert(button != NULL);
     assert(button->name != NULL);
-    assert(button->rect.w > 0 && button->rect.h > 0);
 
     int text_width, text_height;
     if (strcmp(button->name, IMG_PATH_PLAY) == 0) {
@@ -355,15 +398,41 @@ void render_single_node(RenderContext *context, Node *node) {
     render_pins(context, node);
 
     if (node->operation != switchNode && node->operation != lightNode) {
-        int text_width, text_height;
-        if (TTF_SizeText(context->font, node->name, &text_width, &text_height) == 0) {
-            int text_x, text_y;
-            world_to_screen( node->rect.x, node->rect.y, &text_x, &text_y);
-            text_x += (int)(((node->rect.w - text_width) * sim_state->camera_zoom) / 2);
-            text_y += (int)(((node->rect.h - text_height) * sim_state->camera_zoom) / 2);
-            render_text(context, node->name, text_x, text_y, NULL, sim_state->camera_zoom);
-        } else {
-            render_text(context, node->name, node->rect.x, node->rect.y, NULL, sim_state->camera_zoom);
+        TextChacheElement *text_texture = NULL;
+
+        if (strcmp(node->name, "NOT") == 0) text_texture = context->text_cache.not_texture;
+        else if (strcmp(node->name, "AND") == 0) text_texture = context->text_cache.and_texture;
+        else if (strcmp(node->name, "OR") == 0) text_texture = context->text_cache.or_texture;
+        else if (strcmp(node->name, "XOR") == 0) text_texture = context->text_cache.xor_texture;
+        else if (strcmp(node->name, "XNOR") == 0) text_texture = context->text_cache.xnor_texture;
+        else if (strcmp(node->name, "NOR") == 0) text_texture = context->text_cache.nor_texture;
+        else if (strcmp(node->name, "NAND") == 0) text_texture = context->text_cache.nand_texture;
+        else if (strcmp(node->name, "SWITCH") == 0) text_texture = context->text_cache.switch_texture;
+        else if (strcmp(node->name, "LIGHT") == 0) text_texture = context->text_cache.light_texture;
+        else if (strcmp(node->name, "NOTE") == 0) text_texture = context->text_cache.note_texture;
+        else text_texture = text_to_texture(context, node->name, NULL);
+
+        if (text_texture != NULL) {
+
+            SDL_Rect screen_node_rect;
+            world_rect_to_screen(&node->rect, &screen_node_rect);
+
+            int text_width = (int)(text_texture->rect->w * sim_state->camera_zoom);
+            int text_height = (int)(text_texture->rect->h * sim_state->camera_zoom);
+
+            int text_x = screen_node_rect.x + (screen_node_rect.w - text_width) / 2;
+            int text_y = screen_node_rect.y + (screen_node_rect.h - text_height) / 2;
+
+            SDL_Rect render_rect = {
+                text_x,
+                text_y,
+                text_width,
+                text_height};
+
+            SDL_RenderCopy(context->renderer, text_texture->texture, NULL, &render_rect);
+        }
+        else {
+            printf("Error rendering text texture\n");
         }
     }
 }

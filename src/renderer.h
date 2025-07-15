@@ -7,6 +7,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -23,7 +24,7 @@
 #define NODE_HEIGHT 36
 #define PIN_SIZE 10
 
-#define BUTTON_WIDTH 48
+#define BUTTON_WIDTH 64
 #define BUTTON_HEIGHT 32
 
 #define PADDING 10
@@ -66,18 +67,39 @@ typedef struct {
     SDL_Texture *circle_texture;
 } ImageCache;
 
+typedef struct {
+    SDL_Texture *texture;
+    SDL_Rect *rect;
+} TextChacheElement;
+
+typedef struct {
+    TextChacheElement *not_texture;
+    TextChacheElement *and_texture;
+    TextChacheElement *or_texture;
+    TextChacheElement *xor_texture;
+    TextChacheElement *nor_texture;
+    TextChacheElement *xnor_texture;
+    TextChacheElement *nand_texture;
+    TextChacheElement *switch_texture;
+    TextChacheElement *light_texture;
+    TextChacheElement *note_texture;
+} TextCache;
+
 typedef struct
 {
     SDL_Window *window;
     SDL_Renderer *renderer;
     TTF_Font *font;
     ImageCache image_cache;
+    TextCache text_cache;
+    // DynamicArray *other_text_cache;
 } RenderContext;
 
 RenderContext *init_renderer();
 void clear_screen(RenderContext *context);
 void present_screen(RenderContext *context);
 void cleanup_renderer(RenderContext *context);
+TextChacheElement *text_to_texture(RenderContext *context, char *text, SDL_Color *color);
 void render_text(RenderContext *context, char *text, int x, int y, SDL_Color *color, float zoom);
 void render_img(RenderContext *context, SDL_Texture *texture, SDL_Rect *rect);
 void render_popup(RenderContext *context);
