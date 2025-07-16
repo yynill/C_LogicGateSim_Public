@@ -80,6 +80,8 @@ SimulationState *simulation_init() {
 
     state->hovered_pin = NULL;
 
+    state->clipboard_nodes = NULL;
+
     return state;
 }
 
@@ -872,9 +874,11 @@ void handle_copy() {
 }
 
 void handle_paste() {
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
-    int num_nodes = sim_state->clipboard_nodes->size;
+
+    if (sim_state->clipboard_nodes == NULL) {
+        printf("handle_paste: clipboard is empty, nothing to paste\n");
+        return;
+    }
 
     sim_state->selected_nodes->size = 0;
     sim_state->selected_connection_points->size = 0;
@@ -900,7 +904,6 @@ void handle_paste() {
     }
 
     DynamicArray *matching_connections = find_fully_selected_connections(sim_state->clipboard_nodes);
-    int num_connections = matching_connections->size;
 
     for (int i = 0; i < matching_connections->size; i++) {
         Connection *original_conn = array_get(matching_connections, i);
@@ -918,12 +921,6 @@ void handle_paste() {
         }
     }
     free(matching_connections);
-
-    gettimeofday(&end, NULL);
-    long seconds = end.tv_sec - start.tv_sec;
-    long useconds = end.tv_usec - start.tv_usec;
-    double mtime = ((seconds) * 1000.0 + useconds / 1000.0);
-    printf("🟠 handle_paste took %.3f ms for %d not nodes | %d connections\n", mtime, num_nodes, num_connections);
 }
 
 void handle_backspace() {
@@ -952,13 +949,8 @@ void delete_selected() {
 }
 
 void handle_group_nodes() {
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
-
     int num_inputs = 0;
     int num_outputs = 0;
-
-    int num_nodes = sim_state->selected_nodes->size;
 
     for (int i = 0; i < sim_state->selected_nodes->size; i++) {
         Node *node = array_get(sim_state->selected_nodes, i);
@@ -972,7 +964,6 @@ void handle_group_nodes() {
     }
 
     DynamicArray *matching_connections = find_fully_selected_connections(sim_state->selected_nodes);
-    int num_connections = matching_connections->size;
 
     SDL_Rect outline_rect = calculate_outline_rect(sim_state->selected_nodes, matching_connections);
     SDL_Rect rect = calc_rect(&((SDL_Point){0, 0}), num_inputs, num_outputs, sim_state->popup_state->name_input.text);
@@ -987,12 +978,6 @@ void handle_group_nodes() {
     free(matching_connections);
     array_free(inputs);
     array_free(outputs);
-
-    gettimeofday(&end, NULL);
-    long seconds = end.tv_sec - start.tv_sec;
-    long useconds = end.tv_usec - start.tv_usec;
-    double mtime = ((seconds) * 1000.0 + useconds / 1000.0);
-    printf("🟠 handle_group_nodes took %.3f ms for %d nodes | %d connections\n", mtime, num_nodes, num_connections);
 }
 
 void handle_r_pressed() {

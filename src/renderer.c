@@ -209,16 +209,11 @@ void world_rect_to_screen(const SDL_Rect *world, SDL_Rect *out_screen) {
 TextChacheElement *text_to_texture(RenderContext *context, char *text, SDL_Color *color) {
     TextChacheElement *tce= malloc(sizeof(TextChacheElement));
 
-    if (color == NULL) {
-        SDL_Color default_color = {255, 255, 255, 255};
-        color = &default_color;
-    }
-
-    SDL_Surface *surface = TTF_RenderText_Blended(context->font, text, *color);
-    if (!surface) {
-        printf("Failed to render text! TTF_Error: %s\n", TTF_GetError());
-        return NULL;
-    }
+    SDL_Surface *surface = TTF_RenderText_Blended(
+        context->font,
+        text,
+        color ? *color : (SDL_Color){255, 255, 255, 255}
+    );
 
     tce->texture  = SDL_CreateTextureFromSurface(context->renderer, surface);
     if (!tce->texture) {
