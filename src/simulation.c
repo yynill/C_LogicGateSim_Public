@@ -485,9 +485,10 @@ DynamicArray* get_all_connection_points() {
     return result;
 }
 
-
 int try_handle_connection_point_dragging(float world_x, float world_y) {
     if (!sim_state->is_connection_point_dragging || !sim_state->dragging_connection_point) return 0;
+
+    sim_state->hovered_connection_point = sim_state->dragging_connection_point;
 
     sim_state->dragging_connection_point->x = world_x - sim_state->drag_offset_x - CONNECTION_POINT_SIZE;
     sim_state->dragging_connection_point->y = world_y - sim_state->drag_offset_y - CONNECTION_POINT_SIZE;
@@ -495,7 +496,6 @@ int try_handle_connection_point_dragging(float world_x, float world_y) {
 
     return 1;
 }
-
 
 int try_hover_connection_point(float world_x, float world_y) {
     DynamicArray *connection_points = get_all_connection_points();
@@ -576,7 +576,7 @@ int point_in_node(float world_x, float world_y, Node *node) {
 }
 
 Node *find_node_at_position(DynamicArray *nodes, float x, float y) {
-    for (int i = 0; i < nodes->size; i++) {
+    for (int i = nodes->size - 1; i >= 0 ; i--) {
         Node *node = array_get(nodes, i);
 
         if (node->sub_nodes && node->sub_nodes->size > 0 && node->is_expanded) {
