@@ -37,6 +37,7 @@ void move_group_node_pins(Node *node);
 void reshape_outline_box(Node *node);
 
 void handle_close_group(void *function_data);
+void move_node(Node *node, float dx, float dy);
 
 Node *create_node(DynamicArray* inputs, DynamicArray* ouptuts, Operation *op, SDL_Point *spawn_pos, const char *name);
 Node *create_group_node(SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray* ouptuts, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded);

@@ -190,6 +190,41 @@ void handle_close_group(void *function_data) {
     move_group_node_pins(node);
 }
 
+void move_node(Node *node, float dx, float dy) {
+    node->rect.x += dx;
+    node->rect.y += dy;
+    node->outline_rect.x += dx;
+    node->outline_rect.y += dy;
+    if (node->close_btn != NULL) {
+        node->close_btn->rect.x += dx;
+        node->close_btn->rect.y += dy;
+    }
+
+    Node *ancestor = node->parent;
+    while (ancestor != NULL) {
+        reshape_outline_box(ancestor);
+        ancestor = ancestor->parent;
+    }
+
+    if (node->sub_connections != NULL) {
+        for (int j = 0; j < node->sub_connections->size; j++) {
+            Connection *con = array_get(node->sub_connections, j);
+            for (int i = 0; i < con->points->size; i++) {
+                Connection_point *pt = array_get(con->points, i);
+                pt->x += dx;
+                pt->y += dy;
+            }
+        }
+    }
+
+    if (node->sub_nodes != NULL) {
+        for (int i = 0; i < node->sub_nodes->size; i++) {
+            Node *current = array_get(node->sub_nodes, i);
+            move_node(current, dx, dy);
+        }
+    }
+}
+
 SDL_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_connections) {
     if (sub_nodes->size == 0 && sub_connections->size == 0) {
         return (SDL_Rect){0, 0, 0, 0};

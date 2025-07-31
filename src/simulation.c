@@ -283,8 +283,13 @@ int try_handle_connection_point_left_click() {
 int try_handle_connection_point_right_click() {
     if (sim_state->hovered_connection_point == NULL) return 0;
 
+    float world_x, world_y;
+    screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
+
     sim_state->is_connection_point_dragging = 1;
     sim_state->dragging_connection_point = sim_state->hovered_connection_point;
+    sim_state->drag_offset_x = world_x - sim_state->hovered_connection_point->x;
+    sim_state->drag_offset_y = world_y - sim_state->hovered_connection_point->y;
     return 1;
 }
 
@@ -428,41 +433,6 @@ int try_draw_selection_box() {
     return 1;
 }
 
-void move_node(Node *node, float dx, float dy) {
-    node->rect.x += dx;
-    node->rect.y += dy;
-    node->outline_rect.x += dx;
-    node->outline_rect.y += dy;
-    if (node->close_btn != NULL) {
-        node->close_btn->rect.x += dx;
-        node->close_btn->rect.y += dy;
-    }
-
-    Node *ancestor = node->parent;
-    while (ancestor != NULL) {
-        reshape_outline_box(ancestor);
-        ancestor = ancestor->parent;
-    }
-
-    if (node->sub_connections != NULL) {
-        for (int j = 0; j < node->sub_connections->size; j++) {
-            Connection *con = array_get(node->sub_connections, j);
-            for (int i = 0; i < con->points->size; i++) {
-                Connection_point *pt = array_get(con->points, i);
-                pt->x += dx;
-                pt->y += dy;
-            }
-        }
-    }
-
-    if (node->sub_nodes != NULL) {
-        for (int i = 0; i < node->sub_nodes->size; i++) {
-            Node *current = array_get(node->sub_nodes, i);
-            move_node(current, dx, dy);
-        }
-    }
-}
-
 int try_handle_node_dragging(float world_x, float world_y) {
     if (!sim_state->is_node_dragging || sim_state->dragged_node == NULL) return 0;
 
@@ -516,14 +486,12 @@ DynamicArray* get_all_connection_points() {
 }
 
 
-int try_drag_connection_point(float world_x, float world_y) {
+int try_handle_connection_point_dragging(float world_x, float world_y) {
     if (!sim_state->is_connection_point_dragging || !sim_state->dragging_connection_point) return 0;
 
-    Connection_point *point = sim_state->dragging_connection_point;
-    point->x = world_x - sim_state->drag_offset_x;
-    point->y = world_y - sim_state->drag_offset_y;
-
-    update_connection_geometry(point->parent_connection);
+    sim_state->dragging_connection_point->x = world_x - sim_state->drag_offset_x - CONNECTION_POINT_SIZE;
+    sim_state->dragging_connection_point->y = world_y - sim_state->drag_offset_y - CONNECTION_POINT_SIZE;
+    update_connection_geometry(sim_state->dragging_connection_point->parent_connection);
 
     return 1;
 }
@@ -848,11 +816,11 @@ void process_mouse_motion() {
     float world_x, world_y;
     screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
 
+    if (try_hover_connection_point(world_x, world_y)) return;
     if (try_handle_knife_stroke_motion(world_x, world_y)) return;
     if (try_update_pin_hover(world_x, world_y)) return;
     if (try_handle_node_dragging(world_x, world_y)) return;
-    if (try_hover_connection_point(world_x, world_y)) return;
-    if (try_drag_connection_point(world_x, world_y)) return;
+    if (try_handle_connection_point_dragging(world_x, world_y)) return;
     if (try_draw_selection_box()) return;
 }
 

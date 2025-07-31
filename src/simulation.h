@@ -125,7 +125,7 @@ void start_selection_box();
 int try_draw_selection_box();
 int try_handle_node_dragging(float world_x, float world_y);
 int try_hover_connection_point(float world_x, float world_y);
-int try_drag_connection_point(float world_x, float world_y);
+int try_handle_connection_point_dragging(float world_x, float world_y);
 int try_update_pin_hover(float world_x, float world_y);
 int try_handle_knife_stroke_motion(float world_x, float world_y);
 int try_handle_node_left_click();

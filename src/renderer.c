@@ -583,7 +583,7 @@ void render_connection_points(RenderContext *context, Connection *con) {
         world_to_screen(p->x, p->y, &sx, &sy);
 
         SDL_Rect pin_rect;
-        int pin_size = (int)(8 * sim_state->camera_zoom);
+        int pin_size = (int)(CONNECTION_POINT_SIZE * sim_state->camera_zoom);
         pin_rect.w = pin_size;
         pin_rect.h = pin_size;
         pin_rect.x = sx - pin_size / 2;
