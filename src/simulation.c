@@ -874,7 +874,6 @@ void handle_copy() {
 }
 
 void handle_paste() {
-
     if (sim_state->clipboard_nodes == NULL) {
         printf("handle_paste: clipboard is empty, nothing to paste\n");
         return;
@@ -885,13 +884,14 @@ void handle_paste() {
 
     for (int i = 0; i < sim_state->clipboard_nodes->size; i++) {
         Node *current = array_get(sim_state->clipboard_nodes, i);
+        print_node(current);
         SDL_Point pos = {.x = current->rect.x + 10, .y = current->rect.y + 10};
         DynamicArray *inputs = array_create_empty_with_size(current->inputs->size);
         DynamicArray *outputs = array_create_empty_with_size(current->outputs->size);
         Node *new;
 
         if (current->sub_nodes != NULL) {
-            new = create_group_node(&pos, inputs, outputs, current->name, current->sub_nodes, current->sub_connections, current->is_expanded);
+            new = copy_node(current);
         }
         else {
             new = create_node(inputs, outputs, current->operation, &pos, current->name);
@@ -973,6 +973,9 @@ void handle_group_nodes() {
     DynamicArray *outputs = array_create_empty_with_size(num_outputs);
 
     Node *group_node = create_group_node(&pos, inputs, outputs, sim_state->popup_state->name_input.text, sim_state->selected_nodes, matching_connections, 1);
+
+    sim_state->selected_connection_points->size = 0;
+    sim_state->selected_nodes->size = 0;
 
     array_add(sim_state->nodes, group_node);
     free(matching_connections);

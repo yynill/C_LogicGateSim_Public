@@ -85,6 +85,64 @@ Node *create_node(DynamicArray* inputs, DynamicArray* ouptuts, Operation *op, SD
     return node;
 }
 
+Node *create_group_node(SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray* ouptuts, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded) {
+    assert(sub_nodes != NULL);
+    assert(sub_connections != NULL);
+
+    char *name_copy = strdup(name);
+    Node *group_node = create_node(inputs, ouptuts, nullGate, spawn_pos, name_copy);
+
+    group_node->sub_nodes = array_create(8);
+    group_node->sub_connections = array_create(8);
+
+    array_move_all(group_node->sub_nodes, sub_nodes);
+    array_move_all(group_node->sub_connections, sub_connections);
+
+    for (int i = 0; i < group_node->sub_nodes->size; i++) {
+        Node *sub_node = array_get(group_node->sub_nodes, i);
+        sub_node->parent = group_node;
+        array_remove(sim_state->nodes, sub_node);
+    }
+
+    for (int i = 0; i < group_node->sub_connections->size; i++) {
+        Connection *sub_con = array_get(group_node->sub_connections, i);
+        array_remove(sim_state->connections, sub_con);
+    }
+
+    group_node->is_expanded = is_expanded;
+    SDL_Rect outline_rect = calculate_outline_rect(group_node->sub_nodes, group_node->sub_connections);
+    group_node->outline_rect = outline_rect;
+    group_node->close_btn = create_button((SDL_Rect){outline_rect.x, outline_rect.y - 30, 20, 20}, "X", group_node, handle_close_group);
+
+    move_group_node_pins(group_node);
+
+    return group_node;
+}
+
+Node *copy_node(Node *node) {
+    SDL_Point point = {node->rect.x + 10, node->rect.y + 10};
+    SDL_Point *pos = &point;
+
+    if (node->sub_nodes == NULL) {
+        return create_node(node->inputs, node->outputs, node->operation, pos, node->name);
+    }
+
+    DynamicArray *copied_sub_nodes = array_create(8);
+    for (int i = 0; i < node->sub_nodes->size; i++) {
+        Node *sub_node = array_get(node->sub_nodes, i);
+        array_add(copied_sub_nodes, copy_node(sub_node));
+    }
+
+    DynamicArray *copied_sub_connections = array_create(8);
+    for (int i = 0; i < node->sub_connections->size; i++) {
+        Connection *sub_con = array_get(node->sub_connections, i);
+        array_add(copied_sub_connections, copy_connection(sub_con, node->sub_nodes, copied_sub_nodes, 10, 10));
+    }
+
+    Node *copy = create_group_node(pos, node->inputs, node->outputs, node->name, copied_sub_nodes, copied_sub_connections, node->is_expanded);
+    return copy;
+}
+
 void move_group_node_pins(Node *node) {
     if(node->is_expanded){
         for (int i = 0; i < node->inputs->size; i++) {
@@ -197,40 +255,6 @@ SDL_Point calculate_pos_from_outline_rect(SDL_Rect outline_rect, SDL_Rect node_r
     pos.y = outline_rect.y + (outline_rect.h / 2) - (node_rect.h / 2);
 
     return pos;
-}
-
-Node *create_group_node(SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray* ouptuts, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded) {
-    assert(sub_nodes != NULL);
-    assert(sub_connections != NULL);
-
-    char *name_copy = strdup(name);
-    Node *group_node = create_node(inputs, ouptuts, nullGate, spawn_pos, name_copy);
-
-    group_node->sub_nodes = array_create(8);
-    group_node->sub_connections = array_create(8);
-
-    array_move_all(group_node->sub_nodes, sub_nodes);
-    array_move_all(group_node->sub_connections, sub_connections);
-
-    for (int i = 0; i < group_node->sub_nodes->size; i++) {
-        Node *sub_node = array_get(group_node->sub_nodes, i);
-        sub_node->parent = group_node;
-        array_remove(sim_state->nodes, sub_node);
-    }
-
-    for (int i = 0; i < group_node->sub_connections->size; i++) {
-        Connection *sub_con = array_get(group_node->sub_connections, i);
-        array_remove(sim_state->connections, sub_con);
-    }
-
-    group_node->is_expanded = is_expanded;
-    SDL_Rect outline_rect = calculate_outline_rect(group_node->sub_nodes, group_node->sub_connections);
-    group_node->outline_rect = outline_rect;
-    group_node->close_btn = create_button((SDL_Rect){outline_rect.x, outline_rect.y - 30, 20, 20}, "X", group_node, handle_close_group);
-
-    move_group_node_pins(group_node);
-
-    return group_node;
 }
 
 SDL_Point *find_most_top_left(DynamicArray *nodes) {
