@@ -1,5 +1,12 @@
-#include "point.h"
+#include "coordinate_system.h"
 
+SDL_Rect float_rect_to_sdl_rect(Float_Rect *rect) {
+    return (SDL_Rect){(int)rect->x, (int)rect->y, (int)rect->w, (int)rect->h};
+}
+
+Float_Rect sdl_rect_to_float_rect(SDL_Rect *rect) {
+    return (Float_Rect){(float)rect->x, (float)rect->y, (float)rect->w, (float)rect->h};
+}
 
 void point_print(SDL_Point *p) {
     printf("(%d, %d)\n", p->x, p->y);
@@ -58,16 +65,16 @@ float distance_to_line_segment(float px, float py, float x1, float y1, float x2,
     float B = py - y1;
     float C = x2 - x1;
     float D = y2 - y1;
-    
+
     float dot = A * C + B * D;
     float len_sq = C * C + D * D;
-    
+
     if (len_sq == 0) {
         return sqrt(A * A + B * B);
     }
-    
+
     float param = dot / len_sq;
-    
+
     float xx, yy;
     if (param < 0) {
         xx = x1;
@@ -79,7 +86,7 @@ float distance_to_line_segment(float px, float py, float x1, float y1, float x2,
         xx = x1 + param * C;
         yy = y1 + param * D;
     }
-    
+
     float dx = px - xx;
     float dy = py - yy;
     return sqrt(dx * dx + dy * dy);

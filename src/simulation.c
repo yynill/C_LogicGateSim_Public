@@ -26,21 +26,21 @@ SimulationState *simulation_init() {
     state->selected_connection_points = array_create(16);
     assert(state->selected_connection_points != NULL);
 
-    array_add(state->buttons, create_button((SDL_Rect){10, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "NOT", notGate, add_node));
-    array_add(state->buttons, create_button((SDL_Rect){80, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "AND", andGate, add_node));
-    array_add(state->buttons, create_button((SDL_Rect){150, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "OR", orGate, add_node));
-    array_add(state->buttons, create_button((SDL_Rect){220, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "XOR", xorGate, add_node));
-    array_add(state->buttons, create_button((SDL_Rect){290, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "XNOR", xnorGate, add_node));
-    array_add(state->buttons, create_button((SDL_Rect){360, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "NOR", norGate, add_node));
-    array_add(state->buttons, create_button((SDL_Rect){430, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "NAND", nandGate, add_node));
-    array_add(state->buttons, create_button((SDL_Rect){550, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "SWITCH", switchNode, add_node));
-    array_add(state->buttons, create_button((SDL_Rect){620, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "LIGHT", lightNode, add_node));
-    array_add(state->buttons, create_button((SDL_Rect){690, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "NOTE", noteNode, add_node));
+    array_add(state->buttons, create_button((Float_Rect){10, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "NOT", notGate, add_node));
+    array_add(state->buttons, create_button((Float_Rect){80, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "AND", andGate, add_node));
+    array_add(state->buttons, create_button((Float_Rect){150, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "OR", orGate, add_node));
+    array_add(state->buttons, create_button((Float_Rect){220, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "XOR", xorGate, add_node));
+    array_add(state->buttons, create_button((Float_Rect){290, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "XNOR", xnorGate, add_node));
+    array_add(state->buttons, create_button((Float_Rect){360, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "NOR", norGate, add_node));
+    array_add(state->buttons, create_button((Float_Rect){430, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "NAND", nandGate, add_node));
+    array_add(state->buttons, create_button((Float_Rect){550, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "SWITCH", switchNode, add_node));
+    array_add(state->buttons, create_button((Float_Rect){620, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "LIGHT", lightNode, add_node));
+    array_add(state->buttons, create_button((Float_Rect){690, 10, BUTTON_WIDTH, BUTTON_HEIGHT}, "NOTE", noteNode, add_node));
 
-    array_add(state->buttons, create_button((SDL_Rect){WINDOW_WIDTH - 4 * (BUTTON_HEIGHT + 10), 15, BUTTON_HEIGHT / 2, BUTTON_HEIGHT / 2}, "/assets/images/step_back.png", nullGate, null_function));
-    array_add(state->buttons, create_button((SDL_Rect){WINDOW_WIDTH - 3 * (BUTTON_HEIGHT + 10), 15, BUTTON_HEIGHT / 2, BUTTON_HEIGHT / 2}, "/assets/images/play.png", nullGate, toggle_play_pause));
-    array_add(state->buttons, create_button((SDL_Rect){WINDOW_WIDTH - 2 * (BUTTON_HEIGHT + 10), 15, BUTTON_HEIGHT / 2, BUTTON_HEIGHT / 2}, "/assets/images/step_forth.png", nullGate, one_step));
-    array_add(state->buttons, create_button((SDL_Rect){WINDOW_WIDTH - 1 * (BUTTON_HEIGHT + 10), 15, BUTTON_HEIGHT / 2, BUTTON_HEIGHT / 2}, "/assets/images/reload.png", nullGate, reset_sim));
+    array_add(state->buttons, create_button((Float_Rect){WINDOW_WIDTH - 4 * (BUTTON_HEIGHT + 10), 15, BUTTON_HEIGHT / 2, BUTTON_HEIGHT / 2}, "/assets/images/step_back.png", nullGate, null_function));
+    array_add(state->buttons, create_button((Float_Rect){WINDOW_WIDTH - 3 * (BUTTON_HEIGHT + 10), 15, BUTTON_HEIGHT / 2, BUTTON_HEIGHT / 2}, "/assets/images/play.png", nullGate, toggle_play_pause));
+    array_add(state->buttons, create_button((Float_Rect){WINDOW_WIDTH - 2 * (BUTTON_HEIGHT + 10), 15, BUTTON_HEIGHT / 2, BUTTON_HEIGHT / 2}, "/assets/images/step_forth.png", nullGate, one_step));
+    array_add(state->buttons, create_button((Float_Rect){WINDOW_WIDTH - 1 * (BUTTON_HEIGHT + 10), 15, BUTTON_HEIGHT / 2, BUTTON_HEIGHT / 2}, "/assets/images/reload.png", nullGate, reset_sim));
 
     state->left_mouse_down = 0;
     state->right_mouse_down = 0;
@@ -53,7 +53,7 @@ SimulationState *simulation_init() {
     state->drag_offset_y = 0;
 
     state->is_selection_box_drawing = 0;
-    state->selection_box = (SDL_Rect){0, 0, 0, 0};
+    state->selection_box = (Float_Rect){0, 0, 0, 0};
 
     state->is_node_dragging = 0;
     state->is_camera_dragging = 0;
@@ -163,7 +163,7 @@ void add_node(void *function_data) {
     Operation *op = (Operation *)button->function_data;
 
     float world_x, world_y;
-    screen_to_world(100, 100, &world_x, &world_y);
+    screen_point_to_world(100, 100, &world_x, &world_y);
     SDL_Point node_pos = {.x = world_x, .y = world_y};
 
     int num_inputs = 2;
@@ -256,7 +256,7 @@ void one_step(void *function_data) {
 
 int try_handle_node_left_click() {
     float world_x, world_y;
-    screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
+    screen_point_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
 
     Node *node = find_node_at_position(sim_state->nodes, world_x, world_y);
     if (node == NULL) return 0;
@@ -284,7 +284,7 @@ int try_handle_connection_point_right_click() {
     if (sim_state->hovered_connection_point == NULL) return 0;
 
     float world_x, world_y;
-    screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
+    screen_point_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
 
     sim_state->is_connection_point_dragging = 1;
     sim_state->dragging_connection_point = sim_state->hovered_connection_point;
@@ -295,7 +295,7 @@ int try_handle_connection_point_right_click() {
 
 int try_handle_connection_right_click() {
     float world_x, world_y;
-    screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
+    screen_point_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
 
     Connection *closest_connection = NULL;
     Connection_point *closest_p1 = NULL;
@@ -344,7 +344,7 @@ int try_handle_connection_right_click() {
 
 int try_handle_close_group_button_click(DynamicArray *nodes) {
     float world_x, world_y;
-    screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
+    screen_point_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
 
     DynamicArray *group_buttons = array_create(4);
 
@@ -391,7 +391,7 @@ int try_handle_pin_click() {
         sim_state->new_connection = start_connection(sim_state->hovered_pin);
 
         float world_mouse_x, world_mouse_y;
-        screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_mouse_x, &world_mouse_y);
+        screen_point_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_mouse_x, &world_mouse_y);
 
         Connection_point *point = add_connection_point(sim_state->new_connection, (int)world_mouse_x, (int)world_mouse_y, sim_state->hovered_pin);
         sim_state->first_connection_point = point;
@@ -566,7 +566,7 @@ int try_handle_knife_stroke_motion(float world_x, float world_y) {
     return 1;
 }
 
-int point_in_rect(float x, float y, SDL_Rect rect) {
+int point_in_rect(float x, float y, Float_Rect rect) {
     return x >= rect.x && x <= rect.x + rect.w &&
            y >= rect.y && y <= rect.y + rect.h;
 }
@@ -626,7 +626,7 @@ void clean_up_connection() {
 
 int try_complete_connection() {
     float world_mouse_x, world_mouse_y;
-    screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_mouse_x, &world_mouse_y);
+    screen_point_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_mouse_x, &world_mouse_y);
 
     if (sim_state->hovered_connection_point != NULL) {
 
@@ -704,13 +704,15 @@ int try_handle_selection() {
 
     if (sim_state->is_selection_box_drawing == 0) return 0;
 
-    SDL_Rect selection_box_world;
+    Float_Rect selection_box_world;
     screen_rect_to_world(&sim_state->selection_box, &selection_box_world);
 
     for (int i = 0; i < sim_state->nodes->size; i++) {
-        Node *current = array_get(sim_state->nodes, i);
-        if (SDL_HasIntersection(&selection_box_world, &current->rect)) {
-            array_add(sim_state->selected_nodes, current);
+        Node *node = array_get(sim_state->nodes, i);
+        SDL_Rect selection_box_rect = float_rect_to_sdl_rect(&selection_box_world);
+        SDL_Rect node_rect = float_rect_to_sdl_rect(&node->rect);
+        if (SDL_HasIntersection(&selection_box_rect, &node_rect)) {
+            array_add(sim_state->selected_nodes, node);
         }
     }
 
@@ -725,7 +727,7 @@ int try_handle_selection() {
     }
 
     sim_state->is_selection_box_drawing = 0;
-    sim_state->selection_box = (SDL_Rect){0, 0, 0, 0};
+    sim_state->selection_box = (Float_Rect){0, 0, 0, 0};
     return 1;
 }
 
@@ -746,7 +748,7 @@ void rename_note() {
 
 int try_handle_node_right_click() {
     float world_x, world_y;
-    screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
+    screen_point_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
 
     Node *clicked_node = find_node_at_position(sim_state->nodes, world_x, world_y);
     if (clicked_node == NULL) return 0;
@@ -769,7 +771,7 @@ int try_add_connection_point() {
     if (!sim_state->right_mouse_down) return 0;
 
     float world_mouse_x, world_mouse_y;
-    screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_mouse_x, &world_mouse_y);
+    screen_point_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_mouse_x, &world_mouse_y);
 
     Connection_point *point = add_connection_point(sim_state->new_connection, (int)world_mouse_x, (int)world_mouse_y, NULL);
     add_connection_link(point, sim_state->last_connection_point);
@@ -814,7 +816,7 @@ void process_mouse_motion() {
     assert(sim_state->buttons != NULL);
 
     float world_x, world_y;
-    screen_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
+    screen_point_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
 
     if (try_hover_connection_point(world_x, world_y)) return;
     if (try_handle_knife_stroke_motion(world_x, world_y)) return;
@@ -933,8 +935,8 @@ void handle_group_nodes() {
 
     DynamicArray *matching_connections = find_fully_selected_connections(sim_state->selected_nodes);
 
-    SDL_Rect outline_rect = calculate_outline_rect(sim_state->selected_nodes, matching_connections);
-    SDL_Rect rect = calc_rect(&((SDL_Point){0, 0}), num_inputs, num_outputs, sim_state->popup_state->name_input.text);
+    Float_Rect outline_rect = calculate_outline_rect(sim_state->selected_nodes, matching_connections);
+    Float_Rect rect = calc_rect(&((SDL_Point){0, 0}), num_inputs, num_outputs, sim_state->popup_state->name_input.text);
     SDL_Point pos = calculate_pos_from_outline_rect(outline_rect, rect);
 
     DynamicArray *inputs = array_create_empty_with_size(num_inputs);
@@ -975,7 +977,7 @@ void handle_l_pressed() {
                 char *file_name = strdup(entry->d_name);
                 if (!file_name) continue;
 
-                SDL_Rect temp_rect = { 0, 0, 1, 1 };
+                Float_Rect temp_rect = { 0, 0, 1, 1 };
                 Button *button = create_button(temp_rect, file_name, file_name, load_graph_from_json);
                 add_popup_button(sim_state->popup_state, button);
             }
@@ -1003,3 +1005,49 @@ void handle_enter(void *function_data) {
     }
 }
 
+
+
+void screen_point_to_world(float screen_x, float screen_y, float *world_x, float *world_y) {
+    *world_x = (screen_x / sim_state->camera_zoom) + sim_state->camera_x;
+    *world_y = (screen_y / sim_state->camera_zoom) + sim_state->camera_y;
+}
+
+void world_point_to_screen(float world_x, float world_y, float *screen_x, float *screen_y) {
+    *screen_x = (world_x - sim_state->camera_x) * sim_state->camera_zoom;
+    *screen_y = (world_y - sim_state->camera_y) * sim_state->camera_zoom;
+}
+
+void screen_rect_to_world(Float_Rect *screen, Float_Rect *out_world) {
+    assert(screen != NULL);
+    assert(out_world != NULL);
+
+    float world_x1, world_y1;
+    float world_x2, world_y2;
+
+    // top left corner
+    screen_point_to_world(screen->x, screen->y, &world_x1, &world_y1);
+
+    // botom right cornder
+    screen_point_to_world(screen->x + screen->w, screen->y + screen->h, &world_x2, &world_y2);
+
+    out_world->x = fminf(world_x1, world_x2);
+    out_world->y = fminf(world_y1, world_y2);
+    out_world->w = fabsf(world_x2 - world_x1);
+    out_world->h = fabsf(world_y2 - world_y1);
+}
+
+void world_rect_to_screen(Float_Rect *world, Float_Rect *out_screen) {
+    assert(world != NULL);
+    assert(out_screen != NULL);
+
+    float screen_x1, screen_y1;
+    float screen_x2, screen_y2;
+
+    world_point_to_screen(world->x, world->y, &screen_x1, &screen_y1);
+    world_point_to_screen(world->x + world->w, world->y + world->h, &screen_x2, &screen_y2);
+
+    out_screen->x = fminf(screen_x1, screen_x2);
+    out_screen->y = fminf(screen_y1, screen_y2);
+    out_screen->w = fabsf(screen_x2 - screen_x1);
+    out_screen->h = fabsf(screen_y2 - screen_y1);
+}

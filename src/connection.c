@@ -584,7 +584,7 @@ void print_connection(Connection *con) {
     for (int i = 0; i < con->input_pins->size; i++) {
         Pin *pin = (Pin *)array_get(con->input_pins, i);
         Node *node = pin->parent_node;
-        printf("    Pin %d: Node: %s (%p) | Pin (%p) State: %d | ID: %d | Pos: (%d, %d)\n",
+        printf("    Pin %d: Node: %s (%p) | Pin (%p) State: %d | ID: %d | Pos: (%f, %f)\n",
                i,
                node ? node->name : "NULL",
                (void *)node,
@@ -598,7 +598,7 @@ void print_connection(Connection *con) {
     for (int i = 0; i < con->output_pins->size; i++) {
         Pin *pin = (Pin *)array_get(con->output_pins, i);
         Node *node = pin->parent_node;
-        printf("    Pin %d: Node: %s (%p) | Pin (%p) State: %d | ID: %d | Pos: (%d, %d)\n",
+        printf("    Pin %d: Node: %s (%p) | Pin (%p) State: %d | ID: %d | Pos: (%f, %f)\n",
                i,
                node ? node->name : "NULL",
                (void *)node,
@@ -613,7 +613,7 @@ void print_connection(Connection *con) {
     printf("  Connection_point:\n");
     for (int i = 0; i < con->points->size; i++) {
         Connection_point *point = (Connection_point *)array_get(con->points, i);
-        printf("    Connection_point (%p) %d (x: %d, y: %d) | neighbors: %d | parent_connection: %p | linked_to_pin: %p\n", (void *)point, i, point->x, point->y, point->neighbors->size, (void *)point->parent_connection, (void *)point->linked_to_pin);
+        printf("    Connection_point (%p) %d (x: %f, y: %f) | neighbors: %d | parent_connection: %p | linked_to_pin: %p\n", (void *)point, i, point->x, point->y, point->neighbors->size, (void *)point->parent_connection, (void *)point->linked_to_pin);
     }
 
     printf("--------------------------\n");

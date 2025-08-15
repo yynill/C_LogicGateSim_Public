@@ -94,7 +94,7 @@ void pm_end_frame_time(PerformanceMetrics *pm) {
     }
 }
 
-void print_performance_metrics(PerformanceMetrics *pm, SimulationState *sim_state) {
+void print_performance_metrics(PerformanceMetrics *pm) {
     if (pm == NULL || sim_state == NULL) return;
 
     int con_sum = sim_state->connections->size;

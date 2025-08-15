@@ -2,28 +2,9 @@
 #define SIMULATION_H
 #pragma once
 
-#include <SDL2/SDL.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <math.h>
-#include <stdlib.h>
-#include <dirent.h>
-
 #include "main.h"
-#include "renderer.h"
-#include "DataStructures/DynamicArray.h"
-#include "node.h"
-#include "point.h"
-#include "button.h"
-#include "connection.h"
-#include "popup_state.h"
-#include "file_handler.h"
 
-typedef struct Node Node;
-typedef struct Connection Connection;
 typedef struct Connection_point Connection_point;
-typedef struct Button Button;
 typedef struct PopupState PopupState;
 
 typedef struct SimulationState {
@@ -48,15 +29,15 @@ typedef struct SimulationState {
     int right_mouse_down;
     int middle_mouse_down;
 
-    int mouse_x;
-    int mouse_y;
+    float mouse_x;
+    float mouse_y;
     int mouse_wheel;
 
     // relative position between where you clicked and the objects origin
-    int drag_offset_x;
-    int drag_offset_y;
+    float drag_offset_x;
+    float drag_offset_y;
 
-    SDL_Rect selection_box;
+    Float_Rect selection_box;
 
     int is_node_dragging;
     int is_camera_dragging;
@@ -73,8 +54,8 @@ typedef struct SimulationState {
 
     Node *dragged_node;
     Node *last_dragged_node;
-    int last_node_x;
-    int last_node_y;
+    float last_node_x;
+    float last_node_y;
 
     Connection_point *hovered_connection_point;
     Connection_point *dragging_connection_point;
@@ -136,5 +117,11 @@ int try_add_connection_point();
 int try_handle_button_click();
 int try_handle_pin_click();
 int try_complete_connection();
+
+void screen_point_to_world(float screen_x, float screen_y, float *world_x, float *world_y);
+void world_point_to_screen(float world_x, float world_y, float *screen_x, float *screen_y);
+
+void screen_rect_to_world(Float_Rect *screen, Float_Rect *out_world);
+void world_rect_to_screen(Float_Rect *world, Float_Rect *out_screen);
 
 #endif // SIMULATION_H

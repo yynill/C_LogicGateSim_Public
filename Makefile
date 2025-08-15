@@ -28,9 +28,9 @@ MAIN_SRC = src/main.c \
 		   src/connection.c \
 		   src/popup_state.c \
 		   src/button.c \
-		   src/point.c \
 		   src/file_handler.c \
-		   src/performanceMonitor.c
+		   src/performanceMonitor.c \
+		   src/coordinate_system.c
 
 MAIN_OBJ = $(MAIN_SRC:.c=.o)
 MAIN_TARGET = main

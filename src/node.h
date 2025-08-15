@@ -2,22 +2,15 @@
 #define NODE_H
 #pragma once
 
-#include <SDL2/SDL.h>
-#include <assert.h>
-#include "DataStructures/DynamicArray.h"
-#include "pin.h"
-#include "button.h"
-#include "operation.h"
-#include "renderer.h"
-#include "connection.h"
-
-typedef struct SimulationState SimulationState;
+#include "main.h"
+typedef struct DynamicArray DynamicArray;
 typedef struct Button Button;
+typedef struct SDL_Point SDL_Point;
 
 typedef struct Node {
     char *name;
     int is_expanded;
-    SDL_Rect rect;
+    Float_Rect rect;
 
     DynamicArray *inputs;  // pins
     DynamicArray *outputs; // pins
@@ -26,7 +19,7 @@ typedef struct Node {
     DynamicArray *sub_nodes;
     DynamicArray *sub_connections;
     struct Node *parent;
-    SDL_Rect outline_rect;
+    Float_Rect outline_rect;
     Button *close_btn;
 } Node;
 
@@ -44,10 +37,10 @@ Node *create_group_node(SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray
 
 Node *copy_node(Node *node);
 
-SDL_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_connections);
-SDL_Point calculate_pos_from_outline_rect(SDL_Rect outline_rect, SDL_Rect node_rect);
+Float_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_connections);
+SDL_Point calculate_pos_from_outline_rect(Float_Rect outline_rect, Float_Rect node_rect);
 SDL_Point *find_most_top_left(DynamicArray *nodes);
-SDL_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name);
+Float_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name);
 void free_node(Node *node);
 
 #endif // NODE_H

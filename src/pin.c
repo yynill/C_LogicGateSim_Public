@@ -1,6 +1,5 @@
 
 #include "pin.h"
-#include "stdlib.h"
 
 int next_pin_id = 0;
 
@@ -90,7 +89,7 @@ void print_pin(Pin *p) {
     }
 
     printf("=== Pin ID: %d ===\n", p->id);
-    printf(" Position: (%d, %d)\n", p->x, p->y);
+    printf(" Position: (%f, %f)\n", p->x, p->y);
     printf(" Is Input: %s\n", p->is_input ? "Yes" : "No");
     printf(" State:    %d\n", p->state);
     if (p->parent_node) {

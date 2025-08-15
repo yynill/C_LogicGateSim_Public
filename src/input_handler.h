@@ -2,13 +2,7 @@
 #define INPUT_HANDLER_H
 #pragma once
 
-#include <SDL2/SDL.h>
-
-#include "simulation.h"
 #include "main.h"
-#include "renderer.h"
-
-#include <assert.h>
 
 void handle_input(SDL_Event *event);
 

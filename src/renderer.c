@@ -161,51 +161,6 @@ void cleanup_renderer(RenderContext *context)
     SDL_Quit();
 }
 
-void screen_to_world(int screen_x, int screen_y, float *world_x, float *world_y) {
-    *world_x = (screen_x / sim_state->camera_zoom) + sim_state->camera_x;
-    *world_y = (screen_y / sim_state->camera_zoom) + sim_state->camera_y;
-}
-
-void world_to_screen(float world_x, float world_y, int *screen_x, int *screen_y) {
-    *screen_x = (int)((world_x - sim_state->camera_x) * sim_state->camera_zoom);
-    *screen_y = (int)((world_y - sim_state->camera_y) * sim_state->camera_zoom);
-}
-
-void screen_rect_to_world(const SDL_Rect *screen, SDL_Rect *out_world) {
-    assert(screen != NULL);
-    assert(out_world != NULL);
-
-    float world_x1, world_y1;
-    float world_x2, world_y2;
-
-    // top left corner
-    screen_to_world(screen->x, screen->y, &world_x1, &world_y1);
-
-    // botom right cornder
-    screen_to_world(screen->x + screen->w, screen->y + screen->h, &world_x2, &world_y2);
-
-    out_world->x = (int)fminf(world_x1, world_x2);
-    out_world->y = (int)fminf(world_y1, world_y2);
-    out_world->w = (int)fabsf(world_x2 - world_x1);
-    out_world->h = (int)fabsf(world_y2 - world_y1);
-}
-
-void world_rect_to_screen(const SDL_Rect *world, SDL_Rect *out_screen) {
-    assert(world != NULL);
-    assert(out_screen != NULL);
-
-    int screen_x1, screen_y1;
-    int screen_x2, screen_y2;
-
-    world_to_screen(world->x, world->y, &screen_x1, &screen_y1);
-    world_to_screen(world->x + world->w, world->y + world->h, &screen_x2, &screen_y2);
-
-    out_screen->x = fmin(screen_x1, screen_x2);
-    out_screen->y = fmin(screen_y1, screen_y2);
-    out_screen->w = abs(screen_x2 - screen_x1);
-    out_screen->h = abs(screen_y2 - screen_y1);
-}
-
 TextChacheElement *text_to_texture(RenderContext *context, char *text, SDL_Color *color) {
     TextChacheElement *tce= malloc(sizeof(TextChacheElement));
 
@@ -222,7 +177,7 @@ TextChacheElement *text_to_texture(RenderContext *context, char *text, SDL_Color
         return NULL;
     }
 
-    tce->rect = malloc(sizeof(SDL_Rect));
+    tce->rect = malloc(sizeof(Float_Rect));
     tce->rect->x = 0;
     tce->rect->y = 0;
     tce->rect->w = (int)(surface->w);
@@ -289,29 +244,30 @@ void render_button(RenderContext *context, Button *button) {
     assert(button->name != NULL);
 
     int text_width, text_height;
+    SDL_Rect button_rect = float_rect_to_sdl_rect(&button->rect);
     if (strcmp(button->name, IMG_PATH_PLAY) == 0) {
-        render_img(context, context->image_cache.play_texture, &button->rect);
+        render_img(context, context->image_cache.play_texture, &button_rect);
     } else if (strcmp(button->name, IMG_PATH_PAUSE) == 0) {
-        render_img(context, context->image_cache.pause_texture, &button->rect);
+        render_img(context, context->image_cache.pause_texture, &button_rect);
     } else if (strcmp(button->name, IMG_PATH_STEP_BACK) == 0) {
-        render_img(context, context->image_cache.step_back_texture, &button->rect);
+        render_img(context, context->image_cache.step_back_texture, &button_rect);
     } else if (strcmp(button->name, IMG_PATH_STEP_FORTH) == 0) {
-        render_img(context, context->image_cache.step_forth_texture, &button->rect);
+        render_img(context, context->image_cache.step_forth_texture, &button_rect);
     } else if (strcmp(button->name, IMG_PATH_RELOAD) == 0) {
-        render_img(context, context->image_cache.reload_texture, &button->rect);
+        render_img(context, context->image_cache.reload_texture, &button_rect);
     }
     else {
         SDL_SetRenderDrawColor(context->renderer, 20, 20, 20, 255);
-        SDL_RenderFillRect(context->renderer, &button->rect);
+        SDL_RenderFillRect(context->renderer, &button_rect);
 
         if (TTF_SizeText(context->font, button->name, &text_width, &text_height) == 0) {
-            int text_x = button->rect.x + (button->rect.w - text_width) / 2;
-            int text_y = button->rect.y + (button->rect.h - text_height) / 2;
+            int text_x = button_rect.x + (button_rect.w - text_width) / 2;
+            int text_y = button_rect.y + (button_rect.h - text_height) / 2;
 
             render_text(context, button->name, text_x, text_y, NULL, 1);
         }
         else {
-            render_text(context, button->name, button->rect.x, button->rect.y, NULL, 1);
+            render_text(context, button->name, button_rect.x, button_rect.y, NULL, 1);
         }
     }
 }
@@ -325,9 +281,9 @@ void render_knife_stroke(RenderContext *context) {
         SDL_Point *p1 = array_get(sim_state->knife_stroke, i);
         SDL_Point *p2 = array_get(sim_state->knife_stroke, i + 1);
 
-        int x1, y1, x2, y2;
-        world_to_screen(p1->x, p1->y, &x1, &y1);
-        world_to_screen(p2->x, p2->y, &x2, &y2);
+        float x1, y1, x2, y2;
+        world_point_to_screen(p1->x, p1->y, &x1, &y1);
+        world_point_to_screen(p2->x, p2->y, &x2, &y2);
 
         SDL_RenderDrawLine(context->renderer, x1, y1, x2, y2);
     }
@@ -338,15 +294,15 @@ void render_selected_node_outline(RenderContext *context, Node *node) {
     assert(node != NULL);
     assert(sim_state != NULL);
 
-    SDL_Rect selection_rect = node->rect;
+    SDL_Rect selection_rect = float_rect_to_sdl_rect(&node->rect);
 
     selection_rect.x -= 2;
     selection_rect.y -= 2;
     selection_rect.w += 4;
     selection_rect.h += 4;
 
-    int new_x, new_y;
-    world_to_screen(selection_rect.x, selection_rect.y, &new_x, &new_y);
+    float new_x, new_y;
+    world_point_to_screen(selection_rect.x, selection_rect.y, &new_x, &new_y);
     int new_w = (int)(selection_rect.w * sim_state->camera_zoom);
     int new_h = (int)(selection_rect.h * sim_state->camera_zoom);
     SDL_Rect dest = {new_x, new_y, new_w, new_h};
@@ -356,13 +312,13 @@ void render_selected_node_outline(RenderContext *context, Node *node) {
 }
 
 void render_single_node(RenderContext *context, Node *node) {
-    SDL_Rect node_rect = node->rect;
+    Float_Rect node_rect = node->rect;
     if (sim_state->dragged_node != NULL && sim_state->dragged_node == node) {
         render_selected_node_outline(context, node);
     }
 
-    int new_x, new_y;
-    world_to_screen(node_rect.x, node_rect.y, &new_x, &new_y);
+    float new_x, new_y;
+    world_point_to_screen(node_rect.x, node_rect.y, &new_x, &new_y);
     int new_w = (int)(node_rect.w * sim_state->camera_zoom);
     int new_h = (int)(node_rect.h * sim_state->camera_zoom);
     SDL_Rect dest = {new_x, new_y, new_w, new_h};
@@ -409,7 +365,7 @@ void render_single_node(RenderContext *context, Node *node) {
 
         if (text_texture != NULL) {
 
-            SDL_Rect screen_node_rect;
+            Float_Rect screen_node_rect;
             world_rect_to_screen(&node->rect, &screen_node_rect);
 
             int text_width = (int)(text_texture->rect->w * sim_state->camera_zoom);
@@ -437,30 +393,32 @@ void render_pins(RenderContext *context, Node *node) {
     for (int i = 0; i < num_inputs; i++) {
         Pin *pin = array_get(node->inputs, i);
 
-        SDL_Rect pin_rect;
-        world_to_screen(node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
-        pin_rect.w = (int)(PIN_SIZE * sim_state->camera_zoom);
-        pin_rect.h = (int)(PIN_SIZE * sim_state->camera_zoom);
+        Float_Rect pin_rect;
+        world_point_to_screen(node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
+        pin_rect.w = (PIN_SIZE * sim_state->camera_zoom);
+        pin_rect.h = (PIN_SIZE * sim_state->camera_zoom);
+        SDL_Rect pin_screen_rect = float_rect_to_sdl_rect(&pin_rect);
 
         if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 60, 60);
         else if (pin->state) SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 200, 103);
         else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 0);
-        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_rect);
+        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_screen_rect);
     }
 
     int num_outputs = node->outputs->size;
     for (int i = 0; i < num_outputs; i++) {
         Pin *pin = array_get(node->outputs, i);
 
-        SDL_Rect pin_rect;
-        world_to_screen(node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
-        pin_rect.w = (int)(PIN_SIZE * sim_state->camera_zoom);
-        pin_rect.h = (int)(PIN_SIZE * sim_state->camera_zoom);
+        Float_Rect pin_rect;
+        world_point_to_screen(node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
+        pin_rect.w = (PIN_SIZE * sim_state->camera_zoom);
+        pin_rect.h = (PIN_SIZE * sim_state->camera_zoom);
+        SDL_Rect pin_screen_rect = float_rect_to_sdl_rect(&pin_rect);
 
         if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 60, 60);
         else if (pin->state) SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 200, 103);
         else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 0);
-        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_rect);
+        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_screen_rect);
     }
 }
 
@@ -480,20 +438,21 @@ void render_node(RenderContext *context, Node *node) {
     }
 
     // render group nodes
-    SDL_Rect outline = node->outline_rect;
+    SDL_Rect outline = float_rect_to_sdl_rect(&node->outline_rect);
 
-    int outline_screen_x, outline_screen_y;
-    world_to_screen(outline.x, outline.y, &outline_screen_x, &outline_screen_y);
+    float outline_screen_x, outline_screen_y;
+    world_point_to_screen(outline.x, outline.y, &outline_screen_x, &outline_screen_y);
     int outline_screen_w = (int)(outline.w * sim_state->camera_zoom);
     int outline_screen_h = (int)(outline.h * sim_state->camera_zoom);
     SDL_Rect outline_screen_rect = {outline_screen_x, outline_screen_y, outline_screen_w, outline_screen_h};
 
     render_text(context, node->name, outline_screen_rect.x + 32 * sim_state->camera_zoom, outline_screen_rect.y - 32 * sim_state->camera_zoom, NULL, sim_state->camera_zoom * 1.3);
 
-    SDL_Rect arrow_rect;
+    Float_Rect arrow_rect;
     world_rect_to_screen(&node->rect, &arrow_rect);
+    SDL_Rect arrow_screen_rect = float_rect_to_sdl_rect(&arrow_rect);
 
-    render_img(context, context->image_cache.arrows_texture, &arrow_rect);
+    render_img(context, context->image_cache.arrows_texture, &arrow_screen_rect);
 
     SDL_SetRenderDrawColor(context->renderer, 255, 165, 0, 128);
     SDL_SetRenderDrawBlendMode(context->renderer, SDL_BLENDMODE_BLEND);
@@ -512,7 +471,7 @@ void render_node(RenderContext *context, Node *node) {
         render_node(context, sub_node);
     }
 
-    SDL_Rect screen_rect;
+    Float_Rect screen_rect;
     world_rect_to_screen(&node->close_btn->rect, &screen_rect);
 
     Button screen_button = *node->close_btn;
@@ -523,8 +482,8 @@ void render_node(RenderContext *context, Node *node) {
 }
 
 void render_connection_dragging(RenderContext *context) {
-    int world_x, world_y;
-    world_to_screen(sim_state->last_connection_point->x, sim_state->last_connection_point->y, &world_x, &world_y);
+    float world_x, world_y;
+    world_point_to_screen(sim_state->last_connection_point->x, sim_state->last_connection_point->y, &world_x, &world_y);
 
     SDL_SetRenderDrawColor(context->renderer, 0, 0, 30, 255);
 
@@ -556,15 +515,15 @@ void render_connection_branch(RenderContext *context, Connection *con) {
     int thickness = (int)(4 * sim_state->camera_zoom);
     for (int i = 0; i < con->points->size; i++) {
         Connection_point *p1 = array_get(con->points, i);
-        int sx1, sy1;
-        world_to_screen(p1->x, p1->y, &sx1, &sy1);
+        float sx1, sy1;
+        world_point_to_screen(p1->x, p1->y, &sx1, &sy1);
 
         for (int j = 0; j < p1->neighbors->size; j++) {
             Connection_point *p2 = array_get(p1->neighbors, j);
 
             if (p1 < p2) {
-                int sx2, sy2;
-                world_to_screen(p2->x, p2->y, &sx2, &sy2);
+                float sx2, sy2;
+                world_point_to_screen(p2->x, p2->y, &sx2, &sy2);
 
                 for (int t = -thickness / 2; t <= thickness / 2; t++) {
                     SDL_RenderDrawLine(context->renderer, sx1, sy1 + t, sx2, sy2 + t);
@@ -579,8 +538,8 @@ void render_connection_points(RenderContext *context, Connection *con) {
     for (int i = 0; i < con->points->size; i++) {
         Connection_point *p = array_get(con->points, i);
 
-        int sx, sy;
-        world_to_screen(p->x, p->y, &sx, &sy);
+        float sx, sy;
+        world_point_to_screen(p->x, p->y, &sx, &sy);
 
         SDL_Rect pin_rect;
         int pin_size = (int)(CONNECTION_POINT_SIZE * sim_state->camera_zoom);
@@ -612,10 +571,12 @@ void render_selection_box(RenderContext *context) {
     assert(renderer != NULL);
 
     SDL_SetRenderDrawColor(renderer, 120, 120, 120, 255);
-    SDL_RenderFillRect(renderer, &sim_state->selection_box);
+    SDL_Rect draw_rect_1 = float_rect_to_sdl_rect(&sim_state->selection_box);
+    SDL_RenderFillRect(renderer, &draw_rect_1);
 
     SDL_SetRenderDrawColor(renderer, 245, 245, 245, 255);
-    SDL_RenderDrawRect(renderer, &sim_state->selection_box);
+    SDL_Rect draw_rect_2 = float_rect_to_sdl_rect(&sim_state->selection_box);
+    SDL_RenderDrawRect(renderer, &draw_rect_2);
 }
 
 void render_text_input(RenderContext *context, TextInput *input) {

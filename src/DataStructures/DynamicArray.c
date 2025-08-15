@@ -1,7 +1,4 @@
 #include "DynamicArray.h"
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
 
 DynamicArray *array_create(int init_capacity) {
     assert(init_capacity > 0);

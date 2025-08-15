@@ -33,15 +33,16 @@ PopupState *init_popupstate(char *title, void (*on_confirm)(void)) {
     int button_w = 40;
     int button_h = 20;
 
-    SDL_Rect enter_rect = {
+    Float_Rect enter_rect = {
         pop_state->rect.x + pop_state->rect.w - button_w - PADDING,
         pop_state->rect.y + pop_state->rect.h - button_h - PADDING,
         button_w,
         button_h
     };
+
     pop_state->enter_button = create_button(enter_rect, "enter", nullGate, handle_enter);
 
-    SDL_Rect esc_rect = {
+    Float_Rect esc_rect = {
         enter_rect.x - button_w - PADDING,
         enter_rect.y,
         button_w,

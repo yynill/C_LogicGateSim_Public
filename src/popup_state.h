@@ -2,15 +2,9 @@
 #define POPUPSTATE_H
 #pragma once
 
-#include <assert.h>
-#include <SDL2/SDL.h>
-#include <string.h>
-
-#include "renderer.h"
-#include "button.h"
-#include "DataStructures/DynamicArray.h"
-#include "simulation.h"
-
+#include "main.h"
+typedef struct SDL_Rect SDL_Rect;
+typedef struct DynamicArray DynamicArray;
 typedef struct Button Button;
 
 typedef struct {

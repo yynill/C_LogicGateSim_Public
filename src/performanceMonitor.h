@@ -1,18 +1,8 @@
 #ifndef PERFORMANCE_MONITOR_H
 #define PERFORMANCE_MONITOR_H
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
-#include <sys/time.h>
-#include "simulation.h"
-#include "simulation.h"
-#include "node.h"
-#include "connection.h"
-#include "pin.h"
-#include "button.h"
-#include "operation.h"
+#include "main.h"
+typedef struct DynamicArray DynamicArray;
 
 typedef struct PerformanceMetrics {
     struct timeval start_time;
@@ -48,7 +38,7 @@ void pm_start_render_time(PerformanceMetrics *pm);
 void pm_end_frame_time(PerformanceMetrics *pm);
 void pm_end_render_time(PerformanceMetrics *pm);
 void pm_end_simulation_time(PerformanceMetrics *pm);
-void print_performance_metrics(PerformanceMetrics *pm, SimulationState *sim_state);
+void print_performance_metrics(PerformanceMetrics *pm);
 int count_nodes(DynamicArray* nodes, int *con_sum);
 
 #endif // PERFORMANCE_MONITOR_H

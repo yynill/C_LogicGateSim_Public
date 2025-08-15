@@ -1,7 +1,7 @@
 #include "node.h"
 
-SDL_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name) {
-    SDL_Rect rect;
+Float_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name) {
+    Float_Rect rect;
 
     if (strcmp(name, "SWITCH") == 0 || strcmp(name, "LIGHT") == 0) {
         rect.x = spawn_pos->x;
@@ -37,7 +37,7 @@ Node *create_node(DynamicArray* inputs, DynamicArray* ouptuts, Operation *op, SD
     Node *node = malloc(sizeof(Node));
     if (!node) return NULL;
 
-    SDL_Rect rect = calc_rect(spawn_pos, num_inputs, num_outputs, name);
+    Float_Rect rect = calc_rect(spawn_pos, num_inputs, num_outputs, name);
 
     node->inputs = array_create(2);
     if (!node->inputs) {
@@ -110,9 +110,9 @@ Node *create_group_node(SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray
     }
 
     group_node->is_expanded = is_expanded;
-    SDL_Rect outline_rect = calculate_outline_rect(group_node->sub_nodes, group_node->sub_connections);
+    Float_Rect outline_rect = calculate_outline_rect(group_node->sub_nodes, group_node->sub_connections);
     group_node->outline_rect = outline_rect;
-    group_node->close_btn = create_button((SDL_Rect){outline_rect.x, outline_rect.y - 30, 20, 20}, "X", group_node, handle_close_group);
+    group_node->close_btn = create_button((Float_Rect){outline_rect.x, outline_rect.y - 30, 20, 20}, "X", group_node, handle_close_group);
 
     move_group_node_pins(group_node);
 
@@ -225,9 +225,9 @@ void move_node(Node *node, float dx, float dy) {
     }
 }
 
-SDL_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_connections) {
+Float_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_connections) {
     if (sub_nodes->size == 0 && sub_connections->size == 0) {
-        return (SDL_Rect){0, 0, 0, 0};
+        return (Float_Rect){0, 0, 0, 0};
     }
 
     Node* first = array_get(sub_nodes, 0);
@@ -240,7 +240,7 @@ SDL_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_conne
     for (int i = 0; i < sub_nodes->size; i++) {
         Node* current = array_get(sub_nodes, i);
 
-        SDL_Rect inner_outline = {0, 0, 0, 0};
+        Float_Rect inner_outline = {0, 0, 0, 0};
         if (current->sub_nodes && current->sub_nodes->size > 0 && current->is_expanded) {
             inner_outline = calculate_outline_rect(current->sub_nodes, current->sub_connections);
         }
@@ -274,7 +274,7 @@ SDL_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_conne
         }
     }
 
-    SDL_Rect outline_rect;
+    Float_Rect outline_rect;
     outline_rect.x = lowest_x - PADDING;
     outline_rect.y = lowest_y - PADDING;
     outline_rect.w = (highest_x - lowest_x) + 2 * PADDING;
@@ -283,13 +283,13 @@ SDL_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_conne
     return outline_rect;
 }
 
-SDL_Point calculate_pos_from_outline_rect(SDL_Rect outline_rect, SDL_Rect node_rect) {
-    SDL_Point pos;
+SDL_Point calculate_pos_from_outline_rect(Float_Rect outline_rect, Float_Rect node_rect) {
+    SDL_Point point;
 
-    pos.x = outline_rect.x + (outline_rect.w / 2) - (node_rect.w / 2);
-    pos.y = outline_rect.y + (outline_rect.h / 2) - (node_rect.h / 2);
+    point.x = outline_rect.x + (outline_rect.w / 2) - (node_rect.w / 2);
+    point.y = outline_rect.y + (outline_rect.h / 2) - (node_rect.h / 2);
 
-    return pos;
+    return point;
 }
 
 SDL_Point *find_most_top_left(DynamicArray *nodes) {
@@ -399,7 +399,7 @@ void reshape_outline_box(Node *node) {
 
     if (node->sub_nodes == NULL || node->sub_nodes->size == 0) return;
 
-    SDL_Rect outline = calculate_outline_rect(node->sub_nodes, node->sub_connections);
+    Float_Rect outline = calculate_outline_rect(node->sub_nodes, node->sub_connections);
 
     node->outline_rect.x = outline.x;
     node->outline_rect.y = outline.y;
@@ -422,7 +422,7 @@ void print_node(Node *node) {
     }
 
     printf("Node (%p): %s\n", (void *)node, node->name);
-    printf("  Position: (%d, %d) Size: (%d x %d)\n",
+    printf("  Position: (%f, %f) Size: (%f x %f)\n",
            node->rect.x, node->rect.y, node->rect.w, node->rect.h);
 
 
@@ -447,7 +447,7 @@ void print_node(Node *node) {
     printf("  Inputs (%d):\n", node->inputs->size);
     for (int i = 0; i < node->inputs->size; i++) {
         Pin *pin = array_get(node->inputs, i);
-        printf("    [Input %d]  Ptr: %p | ID: %d | State: %d | Pos: (%d, %d)\n",
+        printf("    [Input %d]  Ptr: %p | ID: %d | State: %d | Pos: (%f, %f)\n",
                i, (void *)pin, pin->id, pin->state, pin->x, pin->y);
         if (pin->connected_connections && pin->connected_connections->size > 0) {
             printf("      └─ Connected Connections (%d):\n", pin->connected_connections->size);
@@ -461,7 +461,7 @@ void print_node(Node *node) {
     printf("  Outputs (%d):\n", node->outputs->size);
     for (int i = 0; i < node->outputs->size; i++) {
         Pin *pin = array_get(node->outputs, i);
-        printf("    [Output %d] Ptr: %p | ID: %d | State: %d | Pos: (%d, %d)\n",
+        printf("    [Output %d] Ptr: %p | ID: %d | State: %d | Pos: (%f, %f)\n",
                i, (void *)pin, pin->id, pin->state, pin->x, pin->y);
         if (pin->connected_connections && pin->connected_connections->size > 0) {
             printf("      └─ Connected Connections (%d):\n", pin->connected_connections->size);

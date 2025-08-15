@@ -2,16 +2,11 @@
 #define FILEHANDLER_H
 #pragma once
 
-#include <assert.h>
-#include "cJSON/cJSON.h"
-#include "DataStructures/DynamicArray.h"
-#include "node.h"
-#include "connection.h"
-#include "operation.h"
-#include "simulation.h"
-#include <string.h>
-#include <stdint.h>
-#include <SDL2/SDL.h>
+#include "main.h"
+typedef struct cJSON cJSON;
+typedef struct Connection Connection;
+typedef struct Node Node;
+typedef struct DynamicArray DynamicArray;
 
 cJSON *connection_to_json(Connection *con);
 cJSON *node_to_json(Node *node);

@@ -2,24 +2,9 @@
 #define CONNECTION_H
 #pragma once
 
-
-#include <SDL2/SDL.h>
-#include <assert.h>
-#include "DataStructures/DynamicArray.h"
-#include "node.h"
-#include "renderer.h"
-
+#include "main.h"
 typedef struct Pin Pin;
-typedef struct Connection Connection;
-
-typedef struct Connection_point
-{
-    int x;
-    int y;
-    DynamicArray *neighbors; // struct Connection_points
-    Connection *parent_connection;
-    Pin *linked_to_pin;
-} Connection_point; // Undirected, cyclic allowed, Graph
+typedef struct DynamicArray DynamicArray;
 
 typedef struct Connection {
     DynamicArray *input_pins;  // struct Pin
@@ -27,6 +12,14 @@ typedef struct Connection {
     DynamicArray *points;      // struct Connection_point
     int state;
 } Connection;
+
+typedef struct Connection_point {
+    // Float_Point pos;
+    int x, y;
+    DynamicArray *neighbors; // struct Connection_points
+    Connection *parent_connection;
+    Pin *linked_to_pin;
+} Connection_point; // Undirected, cyclic allowed, Graph
 
 Connection *start_connection(Pin *pin);
 Connection_point *create_connection_point(Connection *con, int x, int y, Pin *linked_pin);

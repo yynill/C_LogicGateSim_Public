@@ -2,17 +2,15 @@
 #define RENDERER_H
 #pragma once
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL2_gfxPrimitives.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
 #include "main.h"
-#include "simulation.h"
+typedef struct SDL_Texture SDL_Texture;
+typedef struct SDL_Rect SDL_Rect;
+typedef struct SDL_Window SDL_Window;
+typedef struct SDL_Renderer SDL_Renderer;
+typedef struct TTF_Font TTF_Font;
+typedef struct SDL_Color SDL_Color;
+typedef struct Connection Connection;
+typedef struct Node Node;
 
 #define TOP_BAR_HEIGHT 48
 
@@ -45,10 +43,6 @@
 #define IMG_PATH_LIGHT_OFF "/assets/images/light_off.png"
 #define IMG_PATH_ARROWS "/assets/images/4_arrows.png"
 #define IMG_PATH_CIRCLE "/assets/images/circle.png"
-
-typedef struct SimulationState SimulationState;
-typedef struct Node Node;
-typedef struct Connection Connection;
 
 typedef struct {
     SDL_Texture *play_texture;
@@ -93,7 +87,6 @@ typedef struct
     TTF_Font *font;
     ImageCache image_cache;
     TextCache text_cache;
-    // DynamicArray *other_text_cache;
 } RenderContext;
 
 RenderContext *init_renderer();
@@ -110,9 +103,5 @@ void render_connection_points(RenderContext *context, Connection *con);
 void render_single_node(RenderContext *context, Node *node);
 void render_pins(RenderContext *context, Node *node);
 void render(RenderContext *context);
-
-void world_to_screen(float world_x, float world_y, int *screen_x, int *screen_y);
-void screen_to_world(int screen_x, int screen_y, float *world_x, float *world_y);
-void screen_rect_to_world(const SDL_Rect *screen, SDL_Rect *out_world);
 
 #endif // RENDERER_H
