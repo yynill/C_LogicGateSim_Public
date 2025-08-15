@@ -14,8 +14,7 @@ typedef struct Connection {
 } Connection;
 
 typedef struct Connection_point {
-    // Float_Point pos;
-    int x, y;
+    Float_Point pos;
     DynamicArray *neighbors; // struct Connection_points
     Connection *parent_connection;
     Pin *linked_to_pin;

@@ -297,8 +297,8 @@ cJSON *connection_to_json(Connection *con) {
         for (int i = 0; i < con->points->size; i++) {
             Connection_point *point = array_get(con->points, i);
             cJSON *point_json = cJSON_CreateObject();
-            cJSON_AddNumberToObject(point_json, "x", point->x);
-            cJSON_AddNumberToObject(point_json, "y", point->y);
+            cJSON_AddNumberToObject(point_json, "x", point->pos.x);
+            cJSON_AddNumberToObject(point_json, "y", point->pos.y);
 
             if (point->linked_to_pin) {
                 cJSON_AddNumberToObject(point_json, "linked_pin_id", point->linked_to_pin->id);

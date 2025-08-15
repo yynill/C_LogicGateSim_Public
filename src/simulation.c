@@ -218,7 +218,7 @@ void cut_connection() {
                     SDL_Point *knife_p2 = array_get(sim_state->knife_stroke, l + 1);
 
                     SDL_Point intersection;
-                    if (segment_intersection(knife_p1, knife_p2, &(SDL_Point){con_p1->x, con_p1->y}, &(SDL_Point){con_p2->x, con_p2->y}, &intersection)) {
+                    if (segment_intersection(knife_p1, knife_p2, &(SDL_Point){con_p1->pos.x, con_p1->pos.y}, &(SDL_Point){con_p2->pos.x, con_p2->pos.y}, &intersection)) {
                         unmerge_connection(con, con_p1, con_p2);
                         goto end;
                     }
@@ -288,8 +288,8 @@ int try_handle_connection_point_right_click() {
 
     sim_state->is_connection_point_dragging = 1;
     sim_state->dragging_connection_point = sim_state->hovered_connection_point;
-    sim_state->drag_offset_x = world_x - sim_state->hovered_connection_point->x;
-    sim_state->drag_offset_y = world_y - sim_state->hovered_connection_point->y;
+    sim_state->drag_offset_x = world_x - sim_state->hovered_connection_point->pos.x;
+    sim_state->drag_offset_y = world_y - sim_state->hovered_connection_point->pos.y;
     return 1;
 }
 
@@ -312,7 +312,7 @@ int try_handle_connection_right_click() {
                 Connection_point *p2 = array_get(p1->neighbors, k);
 
                 if (p1 < p2) {
-                    float distance = distance_to_line_segment(world_x, world_y, p1->x, p1->y, p2->x, p2->y);
+                    float distance = distance_to_line_segment(world_x, world_y, p1->pos.x, p1->pos.y, p2->pos.x, p2->pos.y);
 
                     if (distance < closest_distance) {
                         closest_distance = distance;
@@ -450,8 +450,8 @@ int try_handle_node_dragging(float world_x, float world_y) {
 
     for (int i = 0; i < sim_state->selected_connection_points->size; i++) {
         Connection_point *pt = array_get(sim_state->selected_connection_points, i);
-        pt->x += offset_x;
-        pt->y += offset_y;
+        pt->pos.x += offset_x;
+        pt->pos.y += offset_y;
     }
 
     update_all_connections(sim_state->connections, sim_state->nodes);
@@ -490,8 +490,8 @@ int try_handle_connection_point_dragging(float world_x, float world_y) {
 
     sim_state->hovered_connection_point = sim_state->dragging_connection_point;
 
-    sim_state->dragging_connection_point->x = world_x - sim_state->drag_offset_x - CONNECTION_POINT_SIZE;
-    sim_state->dragging_connection_point->y = world_y - sim_state->drag_offset_y - CONNECTION_POINT_SIZE;
+    sim_state->dragging_connection_point->pos.x = world_x - sim_state->drag_offset_x - CONNECTION_POINT_SIZE;
+    sim_state->dragging_connection_point->pos.y = world_y - sim_state->drag_offset_y - CONNECTION_POINT_SIZE;
     update_connection_geometry(sim_state->dragging_connection_point->parent_connection);
 
     return 1;
@@ -503,8 +503,8 @@ int try_hover_connection_point(float world_x, float world_y) {
     for (int i = 0; i < connection_points->size; i++) {
         Connection_point *point = array_get(connection_points, i);
 
-        int dx = world_x - point->x;
-        int dy = world_y - point->y;
+        int dx = world_x - point->pos.x;
+        int dy = world_y - point->pos.y;
         float distance_squared = (dx * dx) + (dy * dy);
         float hover_radius_squared = 25.0f;
 
@@ -720,7 +720,7 @@ int try_handle_selection() {
         Connection *con = array_get(sim_state->connections, i);
         for (int j = 0; j < con->points->size; j++) {
             Connection_point *current = array_get(con->points, j);
-            if (point_in_rect(current->x, current->y, selection_box_world)) {
+            if (point_in_rect(current->pos.x, current->pos.y, selection_box_world)) {
                 array_add(sim_state->selected_connection_points, current);
             }
         }
@@ -854,7 +854,6 @@ void handle_paste() {
 
     for (int i = 0; i < sim_state->clipboard_nodes->size; i++) {
         Node *current = array_get(sim_state->clipboard_nodes, i);
-        print_node(current);
         SDL_Point pos = {.x = current->rect.x + 10, .y = current->rect.y + 10};
         DynamicArray *inputs = array_create_empty_with_size(current->inputs->size);
         DynamicArray *outputs = array_create_empty_with_size(current->outputs->size);

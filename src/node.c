@@ -211,8 +211,8 @@ void move_node(Node *node, float dx, float dy) {
             Connection *con = array_get(node->sub_connections, j);
             for (int i = 0; i < con->points->size; i++) {
                 Connection_point *pt = array_get(con->points, i);
-                pt->x += dx;
-                pt->y += dy;
+                pt->pos.x += dx;
+                pt->pos.y += dy;
             }
         }
     }
@@ -266,11 +266,11 @@ Float_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_con
     for (int i = 0; i < sub_connections->size; i++) {
         Connection* con = array_get(sub_connections, i);
         for (int j = 0; j < con->points->size; j++) {
-            SDL_Point *p = array_get(con->points, j);
-            if (p->x < lowest_x) lowest_x = p->x;
-            if (p->y < lowest_y) lowest_y = p->y;
-            if (p->x > highest_x) highest_x = p->x;
-            if (p->y > highest_y) highest_y = p->y;
+            Connection_point *p = array_get(con->points, j);
+            if (p->pos.x < lowest_x) lowest_x = p->pos.x;
+            if (p->pos.y < lowest_y) lowest_y = p->pos.y;
+            if (p->pos.x > highest_x) highest_x = p->pos.x;
+            if (p->pos.y > highest_y) highest_y = p->pos.y;
         }
     }
 

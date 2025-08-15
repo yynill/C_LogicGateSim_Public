@@ -323,8 +323,8 @@ Connection_point *create_connection_point(Connection *con, int x, int y, Pin *li
         return NULL;
     }
 
-    point->x = x;
-    point->y = y;
+    point->pos.x = x;
+    point->pos.y = y;
     point->parent_connection = con;
     point->neighbors = array_create(2);
     point->linked_to_pin = linked_pin;
@@ -374,8 +374,8 @@ void update_connection_geometry(Connection *con) {
         Connection_point *point = array_get(con->points, i);
         if (point->neighbors->size == 1 && point->linked_to_pin != NULL) {
             SDL_Point pin_center = get_pin_center(point->linked_to_pin);
-            point->x = pin_center.x;
-            point->y = pin_center.y;
+            point->pos.x = pin_center.x;
+            point->pos.y = pin_center.y;
         }
     }
 }
@@ -510,7 +510,7 @@ Connection* copy_connection(Connection *original_conn, DynamicArray *source_node
         if (original_point->linked_to_pin != NULL) {
             linked_pin = find_corresponding_pin(original_point->linked_to_pin, source_nodes, target_nodes);
         }
-        add_connection_point(new_con,  original_point->x + offset_x,  original_point->y + offset_y, linked_pin);
+        add_connection_point(new_con,  original_point->pos.x + offset_x,  original_point->pos.y + offset_y, linked_pin);
     }
 
     for (int j = 0; j < original_conn->points->size; j++) {
@@ -613,7 +613,7 @@ void print_connection(Connection *con) {
     printf("  Connection_point:\n");
     for (int i = 0; i < con->points->size; i++) {
         Connection_point *point = (Connection_point *)array_get(con->points, i);
-        printf("    Connection_point (%p) %d (x: %f, y: %f) | neighbors: %d | parent_connection: %p | linked_to_pin: %p\n", (void *)point, i, point->x, point->y, point->neighbors->size, (void *)point->parent_connection, (void *)point->linked_to_pin);
+        printf("    Connection_point (%p) %d (x: %f, y: %f) | neighbors: %d | parent_connection: %p | linked_to_pin: %p\n", (void *)point, i, point->pos.x, point->pos.y, point->neighbors->size, (void *)point->parent_connection, (void *)point->linked_to_pin);
     }
 
     printf("--------------------------\n");

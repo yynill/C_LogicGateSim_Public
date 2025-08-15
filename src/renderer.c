@@ -483,7 +483,7 @@ void render_node(RenderContext *context, Node *node) {
 
 void render_connection_dragging(RenderContext *context) {
     float world_x, world_y;
-    world_point_to_screen(sim_state->last_connection_point->x, sim_state->last_connection_point->y, &world_x, &world_y);
+    world_point_to_screen(sim_state->last_connection_point->pos.x, sim_state->last_connection_point->pos.y, &world_x, &world_y);
 
     SDL_SetRenderDrawColor(context->renderer, 0, 0, 30, 255);
 
@@ -492,8 +492,8 @@ void render_connection_dragging(RenderContext *context) {
 
     int thickness = (int)(4 * sim_state->camera_zoom);
     for (int t = -thickness / 2; t <= thickness / 2; t++) {
-        SDL_RenderDrawLine(context->renderer, world_x, world_y + t, sim_state->mouse_x, sim_state->mouse_y + t);
-        SDL_RenderDrawLine(context->renderer, world_x + t, world_y, sim_state->mouse_x + t, sim_state->mouse_y);
+        SDL_RenderDrawLine(context->renderer, (int)world_x, (int)(world_y + t), sim_state->mouse_x, sim_state->mouse_y + t);
+        SDL_RenderDrawLine(context->renderer, (int)(world_x + t), (int)world_y, sim_state->mouse_x + t, sim_state->mouse_y);
     }
 }
 
@@ -516,18 +516,18 @@ void render_connection_branch(RenderContext *context, Connection *con) {
     for (int i = 0; i < con->points->size; i++) {
         Connection_point *p1 = array_get(con->points, i);
         float sx1, sy1;
-        world_point_to_screen(p1->x, p1->y, &sx1, &sy1);
+        world_point_to_screen(p1->pos.x, p1->pos.y, &sx1, &sy1);
 
         for (int j = 0; j < p1->neighbors->size; j++) {
             Connection_point *p2 = array_get(p1->neighbors, j);
 
             if (p1 < p2) {
                 float sx2, sy2;
-                world_point_to_screen(p2->x, p2->y, &sx2, &sy2);
+                world_point_to_screen(p2->pos.x, p2->pos.y, &sx2, &sy2);
 
                 for (int t = -thickness / 2; t <= thickness / 2; t++) {
-                    SDL_RenderDrawLine(context->renderer, sx1, sy1 + t, sx2, sy2 + t);
-                    SDL_RenderDrawLine(context->renderer, sx1 + t, sy1, sx2 + t, sy2);
+                    SDL_RenderDrawLine(context->renderer, (int)sx1, (int)(sy1 + t), (int)sx2, (int)(sy2 + t));
+                    SDL_RenderDrawLine(context->renderer, (int)(sx1 + t), (int)sy1, (int)(sx2 + t), (int)sy2);
                 }
             }
         }
@@ -539,7 +539,7 @@ void render_connection_points(RenderContext *context, Connection *con) {
         Connection_point *p = array_get(con->points, i);
 
         float sx, sy;
-        world_point_to_screen(p->x, p->y, &sx, &sy);
+        world_point_to_screen(p->pos.x, p->pos.y, &sx, &sy);
 
         SDL_Rect pin_rect;
         int pin_size = (int)(CONNECTION_POINT_SIZE * sim_state->camera_zoom);
