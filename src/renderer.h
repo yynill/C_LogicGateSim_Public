@@ -100,6 +100,7 @@ void render_popup(RenderContext *context);
 void render_connection(RenderContext *context, Connection *con);
 void render_connection_branch(RenderContext *context, Connection *con);
 void render_connection_points(RenderContext *context, Connection *con);
+void render_origin_marker(RenderContext *context);
 void render_single_node(RenderContext *context, Node *node);
 void render_pins(RenderContext *context, Node *node);
 void render(RenderContext *context);

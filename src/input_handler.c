@@ -62,6 +62,18 @@ void handle_input(SDL_Event *event) {
                 void *nothing = NULL;
                 handle_enter(nothing);
             }
+            else if (event->key.keysym.sym == SDLK_UP) {
+                sim_state->camera_y -= 50.0f / sim_state->camera_zoom;
+            }
+            else if (event->key.keysym.sym == SDLK_DOWN) {
+                sim_state->camera_y += 50.0f / sim_state->camera_zoom;
+            }
+            else if (event->key.keysym.sym == SDLK_LEFT) {
+                sim_state->camera_x -= 50.0f / sim_state->camera_zoom;
+            }
+            else if (event->key.keysym.sym == SDLK_RIGHT) {
+                sim_state->camera_x += 50.0f / sim_state->camera_zoom;
+            }
             break;
         }
 

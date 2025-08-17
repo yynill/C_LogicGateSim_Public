@@ -563,6 +563,37 @@ void render_connection_points(RenderContext *context, Connection *con) {
     }
 }
 
+void render_origin_marker(RenderContext *context) {
+    assert(context != NULL);
+    assert(sim_state != NULL);
+
+    float screen_x, screen_y;
+    world_point_to_screen(0, 0, &screen_x, &screen_y);
+
+    int outer_radius = (int)(15 * sim_state->camera_zoom);
+    int inner_radius = (int)(8 * sim_state->camera_zoom);
+
+    SDL_Rect outer_rect;
+    outer_rect.w = outer_radius * 2;
+    outer_rect.h = outer_radius * 2;
+    outer_rect.x = (int)(screen_x - outer_radius);
+    outer_rect.y = (int)(screen_y - outer_radius);
+
+    SDL_SetTextureColorMod(context->image_cache.circle_texture, 64, 64, 64);
+    SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &outer_rect);
+
+    SDL_Rect inner_rect;
+    inner_rect.w = inner_radius * 2;
+    inner_rect.h = inner_radius * 2;
+    inner_rect.x = (int)(screen_x - inner_radius);
+    inner_rect.y = (int)(screen_y - inner_radius);
+
+    SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 255, 0);
+    SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &inner_rect);
+
+    SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 255, 255);
+}
+
 void render_selection_box(RenderContext *context) {
     assert(context != NULL);
     assert(sim_state != NULL);
@@ -629,6 +660,7 @@ void render(RenderContext *context)
 
     clear_screen(context);
 
+    render_origin_marker(context);
     render_knife_stroke(context);
     render_selection_box(context);
 
