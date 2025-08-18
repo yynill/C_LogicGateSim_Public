@@ -141,6 +141,8 @@ void simulation_update() {
     //     printf("🔵loop\n");
     //     print_connection(con);
     // }
+
+    printf("%d\n", next_pin_id);
 }
 
 void null_function(void *function_data) {
@@ -184,13 +186,7 @@ void add_node(void *function_data) {
         num_outputs = 0;
     }
 
-    DynamicArray *inputs = array_create_empty_with_size(num_inputs);
-    DynamicArray *outputs = array_create_empty_with_size(num_outputs);
-
-    array_add(sim_state->nodes, create_node(inputs, outputs, op, &node_pos, button->name));
-
-    array_free(inputs);
-    array_free(outputs);
+    array_add(sim_state->nodes, create_node(num_inputs, num_outputs, op, &node_pos, button->name));
 }
 
 void cut_connection() {
@@ -855,21 +851,19 @@ void handle_paste() {
     for (int i = 0; i < sim_state->clipboard_nodes->size; i++) {
         Node *current = array_get(sim_state->clipboard_nodes, i);
         SDL_Point pos = {.x = current->rect.x + 10, .y = current->rect.y + 10};
-        DynamicArray *inputs = array_create_empty_with_size(current->inputs->size);
-        DynamicArray *outputs = array_create_empty_with_size(current->outputs->size);
-        Node *new;
+        Node *node_copy;
 
         if (current->sub_nodes != NULL) {
-            new = copy_node(current);
+            node_copy = copy_node(current);
         }
         else {
-            new = create_node(inputs, outputs, current->operation, &pos, current->name);
+            node_copy = create_node(current->inputs->size, current->outputs->size, current->operation, &pos, current->name);
         }
 
-        array_add(sim_state->nodes, new);
-        array_add(sim_state->selected_nodes, new);
-        array_free(inputs);
-        array_free(outputs);
+        // todo: map node pins to node_copy
+
+        array_add(sim_state->nodes, node_copy);
+        array_add(sim_state->selected_nodes, node_copy);
     }
 
     DynamicArray *matching_connections = find_fully_selected_connections(sim_state->clipboard_nodes);
@@ -938,18 +932,13 @@ void handle_group_nodes() {
     Float_Rect rect = calc_rect(&((SDL_Point){0, 0}), num_inputs, num_outputs, sim_state->popup_state->name_input.text);
     SDL_Point pos = calculate_pos_from_outline_rect(outline_rect, rect);
 
-    DynamicArray *inputs = array_create_empty_with_size(num_inputs);
-    DynamicArray *outputs = array_create_empty_with_size(num_outputs);
-
-    Node *group_node = create_group_node(&pos, inputs, outputs, sim_state->popup_state->name_input.text, sim_state->selected_nodes, matching_connections, 1);
+    Node *group_node = create_group_node(&pos, num_inputs, num_outputs, sim_state->popup_state->name_input.text, sim_state->selected_nodes, matching_connections, 1);
 
     sim_state->selected_connection_points->size = 0;
     sim_state->selected_nodes->size = 0;
 
     array_add(sim_state->nodes, group_node);
     free(matching_connections);
-    array_free(inputs);
-    array_free(outputs);
 }
 
 void handle_r_pressed() {

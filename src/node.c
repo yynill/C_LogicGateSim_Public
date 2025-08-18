@@ -28,11 +28,8 @@ Float_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, cons
     return rect;
 }
 
-Node *create_node(DynamicArray* inputs, DynamicArray* ouptuts, Operation *op, SDL_Point *spawn_pos, const char *name) {
+Node *create_node(int num_inputs, int num_outputs, Operation *op, SDL_Point *spawn_pos, const char *name) {
     assert(name != NULL);
-
-    int num_inputs = inputs->size;
-    int num_outputs = ouptuts->size;
 
     Node *node = malloc(sizeof(Node));
     if (!node) return NULL;
@@ -57,8 +54,7 @@ Node *create_node(DynamicArray* inputs, DynamicArray* ouptuts, Operation *op, SD
     float start_y_inputs = (rect.h / 2.0f) - (total_inputs_height / 2.0f);
 
     for (int i = 0; i < num_inputs; i++) {
-        int id = *(int *)array_get(inputs, i);
-        Pin *p = create_pin(-PIN_SIZE / 2, start_y_inputs + i * (PIN_SIZE + spacing), 1, node, id);
+        Pin *p = create_pin(-PIN_SIZE / 2, start_y_inputs + i * (PIN_SIZE + spacing), 1, node);
         array_add(node->inputs, p);
     }
 
@@ -66,8 +62,7 @@ Node *create_node(DynamicArray* inputs, DynamicArray* ouptuts, Operation *op, SD
     float start_y_outputs = (rect.h / 2.0f) - (total_outputs_height / 2.0f);
 
     for (int i = 0; i < num_outputs; i++) {
-        int id = *(int *)array_get(ouptuts, i);
-        Pin *p = create_pin(rect.w - PIN_SIZE / 2, start_y_outputs + i * (PIN_SIZE + spacing), 0, node, id);
+        Pin *p = create_pin(rect.w - PIN_SIZE / 2, start_y_outputs + i * (PIN_SIZE + spacing), 0, node);
         array_add(node->outputs, p);
     }
 
@@ -85,12 +80,12 @@ Node *create_node(DynamicArray* inputs, DynamicArray* ouptuts, Operation *op, SD
     return node;
 }
 
-Node *create_group_node(SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray* ouptuts, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded) {
+Node *create_group_node(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded) {
     assert(sub_nodes != NULL);
     assert(sub_connections != NULL);
 
     char *name_copy = strdup(name);
-    Node *group_node = create_node(inputs, ouptuts, nullGate, spawn_pos, name_copy);
+    Node *group_node = create_node(num_inputs, num_outputs, nullGate, spawn_pos, name_copy);
 
     group_node->sub_nodes = array_create(8);
     group_node->sub_connections = array_create(8);
@@ -124,7 +119,23 @@ Node *copy_node(Node *node) {
     SDL_Point *pos = &point;
 
     if (node->sub_nodes == NULL) {
-        return create_node(node->inputs, node->outputs, node->operation, pos, node->name);
+        printf("🔵copy_node\n");
+        print_node(node);
+        for (int i = 0; i < node->inputs->size; i++) {
+            Pin *p = array_get(node->inputs, i);
+            printf("🔵copy_node - input %d: %d\n", i, p->id);
+        }
+        for (int i = 0; i < node->outputs->size; i++) {
+            Pin *p = array_get(node->outputs, i);
+            printf("🔵copy_node - output %d: %d\n", i, p->id);
+        }
+        
+        int num_inputs = node->inputs->size;
+        int num_outputs = node->outputs->size;
+        
+        Node *node_copy = create_node(num_inputs, num_outputs, node->operation, pos, node->name);
+        
+        return node_copy;
     }
 
     DynamicArray *copied_sub_nodes = array_create(8);
@@ -139,8 +150,12 @@ Node *copy_node(Node *node) {
         array_add(copied_sub_connections, copy_connection(sub_con, node->sub_nodes, copied_sub_nodes, 10, 10));
     }
 
-    Node *copy = create_group_node(pos, node->inputs, node->outputs, node->name, copied_sub_nodes, copied_sub_connections, node->is_expanded);
-    return copy;
+    int num_inputs = node->inputs->size;
+    int num_outputs = node->outputs->size;
+    
+    Node *group_node_copy = create_group_node(pos, num_inputs, num_outputs, node->name, copied_sub_nodes, copied_sub_connections, node->is_expanded);
+    
+    return group_node_copy;
 }
 
 void move_group_node_pins(Node *node) {

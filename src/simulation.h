@@ -117,6 +117,7 @@ int try_add_connection_point();
 int try_handle_button_click();
 int try_handle_pin_click();
 int try_complete_connection();
+void print_node_and_subnodes(Node *node, int indent);
 
 void screen_point_to_world(float screen_x, float screen_y, float *world_x, float *world_y);
 void world_point_to_screen(float world_x, float world_y, float *screen_x, float *screen_y);

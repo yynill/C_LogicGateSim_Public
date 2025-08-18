@@ -3,7 +3,7 @@
 
 int next_pin_id = 0;
 
-Pin* create_pin(int x, int y, int ii, Node* parent_node, int id) {
+Pin* create_pin(int x, int y, int ii, Node* parent_node) {
     Pin* p = malloc(sizeof(Pin));
     assert(p != NULL);
 
@@ -13,21 +13,7 @@ Pin* create_pin(int x, int y, int ii, Node* parent_node, int id) {
     p->parent_node = parent_node;
     p->state = 0;
     p->connected_connections = array_create(1);
-
-    if (id == -1) {
-        p->id = next_pin_id++;
-    } else {
-        if (find_pin_by_id(sim_state->nodes, id) == NULL){
-            p->id = id;
-            if (id >= next_pin_id) {
-                next_pin_id = id + 1;
-            }
-        }
-        else {
-            printf("📌 pin collision for id: %d\n", id);
-            p->id = id;
-        }
-    }
+    p->id = next_pin_id++;
 
     return p;
 }

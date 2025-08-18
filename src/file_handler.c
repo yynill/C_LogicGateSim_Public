@@ -79,7 +79,36 @@ void load_graph_from_json(void *function_data) {
         return;
     }
 
+    int max_pin_id = -1;
     cJSON *nodes_array = cJSON_GetObjectItem(root, "nodes");
+    if (nodes_array && cJSON_IsArray(nodes_array)) {
+        for (int i = 0; i < cJSON_GetArraySize(nodes_array); i++) {
+            cJSON *node_json = cJSON_GetArrayItem(nodes_array, i);
+            cJSON *inputs_json = cJSON_GetObjectItem(node_json, "inputs");
+            cJSON *outputs_json = cJSON_GetObjectItem(node_json, "outputs");
+            
+            if (inputs_json && cJSON_IsArray(inputs_json)) {
+                for (int j = 0; j < cJSON_GetArraySize(inputs_json); j++) {
+                    cJSON *pin_id_json = cJSON_GetArrayItem(inputs_json, j);
+                    int pin_id = (int)cJSON_GetNumberValue(pin_id_json);
+                    if (pin_id > max_pin_id) max_pin_id = pin_id;
+                }
+            }
+            
+            if (outputs_json && cJSON_IsArray(outputs_json)) {
+                for (int j = 0; j < cJSON_GetArraySize(outputs_json); j++) {
+                    cJSON *pin_id_json = cJSON_GetArrayItem(outputs_json, j);
+                    int pin_id = (int)cJSON_GetNumberValue(pin_id_json);
+                    if (pin_id > max_pin_id) max_pin_id = pin_id;
+                }
+            }
+        }
+    }
+    
+    if (max_pin_id >= 0) {
+        next_pin_id = max_pin_id + 1;
+    }
+
     if (nodes_array && cJSON_IsArray(nodes_array)) {
         for (int i = 0; i < cJSON_GetArraySize(nodes_array); i++) {
             cJSON *node_json = cJSON_GetArrayItem(nodes_array, i);
@@ -190,12 +219,45 @@ Node* json_to_node(cJSON *node_json) {
             }
         }
 
-        node = create_group_node(&pos, inputs, outputs, name, sub_nodes, sub_connections, is_expanded);
+        node = create_group_node(&pos, inputs->size, outputs->size, name, sub_nodes, sub_connections, is_expanded);
+        
+        if (inputs_json && cJSON_IsArray(inputs_json)) {
+            for (int i = 0; i < cJSON_GetArraySize(inputs_json) && i < node->inputs->size; i++) {
+                cJSON *pin_id_json = cJSON_GetArrayItem(inputs_json, i);
+                Pin *pin = array_get(node->inputs, i);
+                pin->id = (int)cJSON_GetNumberValue(pin_id_json);
+            }
+        }
+        
+        if (outputs_json && cJSON_IsArray(outputs_json)) {
+            for (int i = 0; i < cJSON_GetArraySize(outputs_json) && i < node->outputs->size; i++) {
+                cJSON *pin_id_json = cJSON_GetArrayItem(outputs_json, i);
+                Pin *pin = array_get(node->outputs, i);
+                pin->id = (int)cJSON_GetNumberValue(pin_id_json);
+            }
+        }
+        
         array_free(sub_nodes);
         array_free(sub_connections);
     }
     else {
-        node = create_node(inputs, outputs, operation, &pos, name);
+        node = create_node(inputs->size, outputs->size, operation, &pos, name);
+        
+        if (inputs_json && cJSON_IsArray(inputs_json)) {
+            for (int i = 0; i < cJSON_GetArraySize(inputs_json) && i < node->inputs->size; i++) {
+                cJSON *pin_id_json = cJSON_GetArrayItem(inputs_json, i);
+                Pin *pin = array_get(node->inputs, i);
+                pin->id = (int)cJSON_GetNumberValue(pin_id_json);
+            }
+        }
+        
+        if (outputs_json && cJSON_IsArray(outputs_json)) {
+            for (int i = 0; i < cJSON_GetArraySize(outputs_json) && i < node->outputs->size; i++) {
+                cJSON *pin_id_json = cJSON_GetArrayItem(outputs_json, i);
+                Pin *pin = array_get(node->outputs, i);
+                pin->id = (int)cJSON_GetNumberValue(pin_id_json);
+            }
+        }
     }
 
     array_free(inputs);

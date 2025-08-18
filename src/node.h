@@ -32,8 +32,8 @@ void reshape_outline_box(Node *node);
 void handle_close_group(void *function_data);
 void move_node(Node *node, float dx, float dy);
 
-Node *create_node(DynamicArray* inputs, DynamicArray* ouptuts, Operation *op, SDL_Point *spawn_pos, const char *name);
-Node *create_group_node(SDL_Point *spawn_pos, DynamicArray* inputs, DynamicArray* ouptuts, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded);
+Node *create_node(int num_inputs, int num_outputs, Operation *op, SDL_Point *spawn_pos, const char *name);
+Node *create_group_node(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded);
 
 Node *copy_node(Node *node);
 
