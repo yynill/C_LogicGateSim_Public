@@ -348,43 +348,43 @@ void render_single_node(RenderContext *context, Node *node) {
     SDL_SetTextureAlphaMod(context->image_cache.circle_texture, 255);
     render_pins(context, node);
 
-    if (node->operation != switchNode && node->operation != lightNode) {
-        TextChacheElement *text_texture = NULL;
+    TextChacheElement *text_texture = NULL;
 
-        if (strcmp(node->name, "NOT") == 0) text_texture = context->text_cache.not_texture;
-        else if (strcmp(node->name, "AND") == 0) text_texture = context->text_cache.and_texture;
-        else if (strcmp(node->name, "OR") == 0) text_texture = context->text_cache.or_texture;
-        else if (strcmp(node->name, "XOR") == 0) text_texture = context->text_cache.xor_texture;
-        else if (strcmp(node->name, "XNOR") == 0) text_texture = context->text_cache.xnor_texture;
-        else if (strcmp(node->name, "NOR") == 0) text_texture = context->text_cache.nor_texture;
-        else if (strcmp(node->name, "NAND") == 0) text_texture = context->text_cache.nand_texture;
-        else if (strcmp(node->name, "SWITCH") == 0) text_texture = context->text_cache.switch_texture;
-        else if (strcmp(node->name, "LIGHT") == 0) text_texture = context->text_cache.light_texture;
-        else if (strcmp(node->name, "NOTE") == 0) text_texture = context->text_cache.note_texture;
-        else text_texture = text_to_texture(context, node->name, NULL);
+    if (strcmp(node->name, "NOT") == 0) text_texture = context->text_cache.not_texture;
+    else if (strcmp(node->name, "AND") == 0) text_texture = context->text_cache.and_texture;
+    else if (strcmp(node->name, "OR") == 0) text_texture = context->text_cache.or_texture;
+    else if (strcmp(node->name, "XOR") == 0) text_texture = context->text_cache.xor_texture;
+    else if (strcmp(node->name, "XNOR") == 0) text_texture = context->text_cache.xnor_texture;
+    else if (strcmp(node->name, "NOR") == 0) text_texture = context->text_cache.nor_texture;
+    else if (strcmp(node->name, "NAND") == 0) text_texture = context->text_cache.nand_texture;
+    else if (strcmp(node->name, "SWITCH") == 0) text_texture = context->text_cache.switch_texture;
+    else if (strcmp(node->name, "LIGHT") == 0) text_texture = context->text_cache.light_texture;
+    else if (strcmp(node->name, "NOTE") == 0) text_texture = context->text_cache.note_texture;
+    else text_texture = text_to_texture(context, node->name, NULL);
 
-        if (text_texture != NULL) {
+    if (text_texture != NULL) {
 
-            Float_Rect screen_node_rect;
-            world_rect_to_screen(&node->rect, &screen_node_rect);
+        Float_Rect screen_node_rect;
+        world_rect_to_screen(&node->rect, &screen_node_rect);
 
-            int text_width = (int)(text_texture->rect->w * sim_state->camera_zoom);
-            int text_height = (int)(text_texture->rect->h * sim_state->camera_zoom);
+        int text_width = (int)(text_texture->rect->w * sim_state->camera_zoom);
+        int text_height = (int)(text_texture->rect->h * sim_state->camera_zoom);
 
-            int text_x = screen_node_rect.x + (screen_node_rect.w - text_width) / 2;
-            int text_y = screen_node_rect.y + (screen_node_rect.h - text_height) / 2;
+        int text_x = screen_node_rect.x + (screen_node_rect.w - text_width) / 2;
+        int text_y = screen_node_rect.y + (screen_node_rect.h - text_height) / 2;
+        if (node->operation == switchNode) text_x = node_rect.x - text_width - 5;
+        if (node->operation == lightNode) text_x = node_rect.x + node_rect.w + 5;
 
-            SDL_Rect render_rect = {
-                text_x,
-                text_y,
-                text_width,
-                text_height};
+        SDL_Rect render_rect = {
+            text_x,
+            text_y,
+            text_width,
+            text_height};
 
-            SDL_RenderCopy(context->renderer, text_texture->texture, NULL, &render_rect);
-        }
-        else {
-            printf("Error rendering text texture\n");
-        }
+        SDL_RenderCopy(context->renderer, text_texture->texture, NULL, &render_rect);
+    }
+    else {
+        printf("Error rendering text texture\n");
     }
 }
 

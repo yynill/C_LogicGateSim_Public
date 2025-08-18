@@ -97,7 +97,7 @@ void one_step(void *function_data);
 void toggle_play_pause(void *function_data);
 void start_selection_box();
 void update_all_connections(DynamicArray *connections, DynamicArray *nodes);
-void rename_note();
+void rename_node();
 void delete_selected();
 void delete_node_and_connections(Node *node);
 Button *find_button_at_position(DynamicArray *buttons, int screen_x, int screen_y);

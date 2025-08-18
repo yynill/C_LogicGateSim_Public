@@ -141,8 +141,6 @@ void simulation_update() {
     //     printf("🔵loop\n");
     //     print_connection(con);
     // }
-
-    printf("%d\n", next_pin_id);
 }
 
 void null_function(void *function_data) {
@@ -727,7 +725,7 @@ int try_handle_selection() {
     return 1;
 }
 
-void rename_note() {
+void rename_node() {
     if (sim_state->selected_nodes->size != 1) {
         printf("❌ You can only rename 1 note at a time - select only 1\n");
         return;
@@ -942,7 +940,7 @@ void handle_group_nodes() {
 }
 
 void handle_r_pressed() {
-    sim_state->popup_state = init_popupstate("Rename Note Node", rename_note);
+    sim_state->popup_state = init_popupstate("Rename Note Node", rename_node);
 }
 
 void handle_g_pressed() {
