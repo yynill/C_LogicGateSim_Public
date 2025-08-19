@@ -3,12 +3,12 @@
 
 int next_pin_id = 0;
 
-Pin* create_pin(int x, int y, int ii, Node* parent_node) {
+Pin* create_pin(int ii, Node* parent_node) {
     Pin* p = malloc(sizeof(Pin));
     assert(p != NULL);
 
-    p->x = x;
-    p->y = y;
+    p->x = 0; // will be set with reposition_node_pins()
+    p->y = 0;
     p->is_input = ii;
     p->parent_node = parent_node;
     p->state = 0;

@@ -86,7 +86,7 @@ void load_graph_from_json(void *function_data) {
             cJSON *node_json = cJSON_GetArrayItem(nodes_array, i);
             cJSON *inputs_json = cJSON_GetObjectItem(node_json, "inputs");
             cJSON *outputs_json = cJSON_GetObjectItem(node_json, "outputs");
-            
+
             if (inputs_json && cJSON_IsArray(inputs_json)) {
                 for (int j = 0; j < cJSON_GetArraySize(inputs_json); j++) {
                     cJSON *pin_id_json = cJSON_GetArrayItem(inputs_json, j);
@@ -94,7 +94,7 @@ void load_graph_from_json(void *function_data) {
                     if (pin_id > max_pin_id) max_pin_id = pin_id;
                 }
             }
-            
+
             if (outputs_json && cJSON_IsArray(outputs_json)) {
                 for (int j = 0; j < cJSON_GetArraySize(outputs_json); j++) {
                     cJSON *pin_id_json = cJSON_GetArrayItem(outputs_json, j);
@@ -104,7 +104,7 @@ void load_graph_from_json(void *function_data) {
             }
         }
     }
-    
+
     if (max_pin_id >= 0) {
         next_pin_id = max_pin_id + 1;
     }
@@ -158,7 +158,6 @@ Node* json_to_node(cJSON *node_json) {
     Node *node;
 
     cJSON *name_json = cJSON_GetObjectItem(node_json, "name");
-    cJSON *is_expanded_json = cJSON_GetObjectItem(node_json, "is_expanded");
     cJSON *pos_json = cJSON_GetObjectItem(node_json, "pos");
     cJSON *x_json = cJSON_GetObjectItem(pos_json, "x");
     cJSON *y_json = cJSON_GetObjectItem(pos_json, "y");
@@ -168,9 +167,7 @@ Node* json_to_node(cJSON *node_json) {
     cJSON *sub_nodes_json = cJSON_GetObjectItem(node_json, "sub_nodes");
     cJSON *sub_connections_json = cJSON_GetObjectItem(node_json, "sub_connections");
 
-
     const char *name = cJSON_GetStringValue(name_json);
-    int is_expanded = cJSON_GetNumberValue(is_expanded_json);
     SDL_Point pos = {
         .x = cJSON_GetNumberValue(x_json),
         .y = cJSON_GetNumberValue(y_json)
@@ -219,8 +216,8 @@ Node* json_to_node(cJSON *node_json) {
             }
         }
 
-        node = create_group_node(&pos, inputs->size, outputs->size, name, sub_nodes, sub_connections, is_expanded);
-        
+        node = create_group_node(&pos, inputs->size, outputs->size, name, sub_nodes, sub_connections);
+
         if (inputs_json && cJSON_IsArray(inputs_json)) {
             for (int i = 0; i < cJSON_GetArraySize(inputs_json) && i < node->inputs->size; i++) {
                 cJSON *pin_id_json = cJSON_GetArrayItem(inputs_json, i);
@@ -228,7 +225,7 @@ Node* json_to_node(cJSON *node_json) {
                 pin->id = (int)cJSON_GetNumberValue(pin_id_json);
             }
         }
-        
+
         if (outputs_json && cJSON_IsArray(outputs_json)) {
             for (int i = 0; i < cJSON_GetArraySize(outputs_json) && i < node->outputs->size; i++) {
                 cJSON *pin_id_json = cJSON_GetArrayItem(outputs_json, i);
@@ -236,13 +233,13 @@ Node* json_to_node(cJSON *node_json) {
                 pin->id = (int)cJSON_GetNumberValue(pin_id_json);
             }
         }
-        
+
         array_free(sub_nodes);
         array_free(sub_connections);
     }
     else {
         node = create_node(inputs->size, outputs->size, operation, &pos, name);
-        
+
         if (inputs_json && cJSON_IsArray(inputs_json)) {
             for (int i = 0; i < cJSON_GetArraySize(inputs_json) && i < node->inputs->size; i++) {
                 cJSON *pin_id_json = cJSON_GetArrayItem(inputs_json, i);
@@ -250,7 +247,7 @@ Node* json_to_node(cJSON *node_json) {
                 pin->id = (int)cJSON_GetNumberValue(pin_id_json);
             }
         }
-        
+
         if (outputs_json && cJSON_IsArray(outputs_json)) {
             for (int i = 0; i < cJSON_GetArraySize(outputs_json) && i < node->outputs->size; i++) {
                 cJSON *pin_id_json = cJSON_GetArrayItem(outputs_json, i);
@@ -397,7 +394,6 @@ cJSON *node_to_json(Node *node) {
     cJSON *node_json = cJSON_CreateObject();
 
     cJSON_AddStringToObject(node_json, "name", node->name);
-    cJSON_AddNumberToObject(node_json, "is_expanded", node->is_expanded);
 
     cJSON *pos_json = cJSON_CreateObject();
     cJSON_AddNumberToObject(pos_json, "x", node->rect.x);

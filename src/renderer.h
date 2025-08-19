@@ -11,6 +11,7 @@ typedef struct TTF_Font TTF_Font;
 typedef struct SDL_Color SDL_Color;
 typedef struct Connection Connection;
 typedef struct Node Node;
+typedef struct Button Button;
 
 #define TOP_BAR_HEIGHT 48
 
@@ -101,8 +102,8 @@ void render_connection(RenderContext *context, Connection *con);
 void render_connection_branch(RenderContext *context, Connection *con);
 void render_connection_points(RenderContext *context, Connection *con);
 void render_origin_marker(RenderContext *context);
-void render_single_node(RenderContext *context, Node *node);
 void render_pins(RenderContext *context, Node *node);
+void render_button(RenderContext *context, Button *button);
 void render(RenderContext *context);
 
 #endif // RENDERER_H

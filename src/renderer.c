@@ -236,6 +236,16 @@ void render_top_bar(RenderContext *context) {
     SDL_SetRenderDrawColor(context->renderer, 40, 40, 40, 255);
     SDL_Rect top_bar = {0, 0, WINDOW_WIDTH, TOP_BAR_HEIGHT};
     SDL_RenderFillRect(context->renderer, &top_bar);
+
+    for (int i = 0; i < sim_state->buttons->size; i++) {
+        Button *button = array_get(sim_state->buttons, i);
+
+        if (strncmp(button->name, IMG_PATH_PLAY, 23) == 0 && !sim_state->is_paused) { button->name = IMG_PATH_PAUSE; }
+        if (strncmp(button->name, IMG_PATH_PAUSE, 24) == 0 && sim_state->is_paused) { button->name = IMG_PATH_PLAY; }
+
+        assert(button != NULL);
+        render_button(context, button);
+    }
 }
 
 void render_button(RenderContext *context, Button *button) {
@@ -311,7 +321,45 @@ void render_selected_node_outline(RenderContext *context, Node *node) {
     SDL_RenderDrawRect(context->renderer, &dest);
 }
 
-void render_single_node(RenderContext *context, Node *node) {
+void render_pins(RenderContext *context, Node *node) {
+    int num_inputs = node->inputs->size;
+    for (int i = 0; i < num_inputs; i++) {
+        Pin *pin = array_get(node->inputs, i);
+
+        Float_Rect pin_rect;
+        world_point_to_screen(node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
+        pin_rect.w = (PIN_SIZE * sim_state->camera_zoom);
+        pin_rect.h = (PIN_SIZE * sim_state->camera_zoom);
+        SDL_Rect pin_screen_rect = float_rect_to_sdl_rect(&pin_rect);
+
+        if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 60, 60);
+        else if (pin->state) SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 200, 103);
+        else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 0);
+        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_screen_rect);
+    }
+
+    int num_outputs = node->outputs->size;
+    for (int i = 0; i < num_outputs; i++) {
+        Pin *pin = array_get(node->outputs, i);
+
+        Float_Rect pin_rect;
+        world_point_to_screen(node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
+        pin_rect.w = (PIN_SIZE * sim_state->camera_zoom);
+        pin_rect.h = (PIN_SIZE * sim_state->camera_zoom);
+        SDL_Rect pin_screen_rect = float_rect_to_sdl_rect(&pin_rect);
+
+        if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 60, 60);
+        else if (pin->state) SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 200, 103);
+        else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 0);
+        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_screen_rect);
+    }
+}
+
+void render_node(RenderContext *context, Node *node) {
+    assert(context != NULL);
+    assert(node != NULL);
+    assert(sim_state != NULL);
+
     Float_Rect node_rect = node->rect;
     if (sim_state->dragged_node != NULL && sim_state->dragged_node == node) {
         render_selected_node_outline(context, node);
@@ -386,99 +434,6 @@ void render_single_node(RenderContext *context, Node *node) {
     else {
         printf("Error rendering text texture\n");
     }
-}
-
-void render_pins(RenderContext *context, Node *node) {
-    int num_inputs = node->inputs->size;
-    for (int i = 0; i < num_inputs; i++) {
-        Pin *pin = array_get(node->inputs, i);
-
-        Float_Rect pin_rect;
-        world_point_to_screen(node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
-        pin_rect.w = (PIN_SIZE * sim_state->camera_zoom);
-        pin_rect.h = (PIN_SIZE * sim_state->camera_zoom);
-        SDL_Rect pin_screen_rect = float_rect_to_sdl_rect(&pin_rect);
-
-        if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 60, 60);
-        else if (pin->state) SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 200, 103);
-        else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 0);
-        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_screen_rect);
-    }
-
-    int num_outputs = node->outputs->size;
-    for (int i = 0; i < num_outputs; i++) {
-        Pin *pin = array_get(node->outputs, i);
-
-        Float_Rect pin_rect;
-        world_point_to_screen(node->rect.x + pin->x, node->rect.y + pin->y, &pin_rect.x, &pin_rect.y);
-        pin_rect.w = (PIN_SIZE * sim_state->camera_zoom);
-        pin_rect.h = (PIN_SIZE * sim_state->camera_zoom);
-        SDL_Rect pin_screen_rect = float_rect_to_sdl_rect(&pin_rect);
-
-        if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 60, 60);
-        else if (pin->state) SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 200, 103);
-        else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 0);
-        SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_screen_rect);
-    }
-}
-
-void render_node(RenderContext *context, Node *node) {
-    assert(context != NULL);
-    assert(node != NULL);
-    assert(sim_state != NULL);
-
-    if (node->sub_nodes == NULL) {
-        render_single_node(context, node);
-        return;
-    }
-
-    if (!node->is_expanded) {
-        render_single_node(context, node);
-        return;
-    }
-
-    // render group nodes
-    SDL_Rect outline = float_rect_to_sdl_rect(&node->outline_rect);
-
-    float outline_screen_x, outline_screen_y;
-    world_point_to_screen(outline.x, outline.y, &outline_screen_x, &outline_screen_y);
-    int outline_screen_w = (int)(outline.w * sim_state->camera_zoom);
-    int outline_screen_h = (int)(outline.h * sim_state->camera_zoom);
-    SDL_Rect outline_screen_rect = {outline_screen_x, outline_screen_y, outline_screen_w, outline_screen_h};
-
-    render_text(context, node->name, outline_screen_rect.x + 32 * sim_state->camera_zoom, outline_screen_rect.y - 32 * sim_state->camera_zoom, NULL, sim_state->camera_zoom * 1.3);
-
-    Float_Rect arrow_rect;
-    world_rect_to_screen(&node->rect, &arrow_rect);
-    SDL_Rect arrow_screen_rect = float_rect_to_sdl_rect(&arrow_rect);
-
-    render_img(context, context->image_cache.arrows_texture, &arrow_screen_rect);
-
-    SDL_SetRenderDrawColor(context->renderer, 255, 165, 0, 128);
-    SDL_SetRenderDrawBlendMode(context->renderer, SDL_BLENDMODE_BLEND);
-    SDL_RenderFillRect(context->renderer, &outline_screen_rect);
-    SDL_SetRenderDrawColor(context->renderer, 255, 165, 0, 255);
-    SDL_RenderDrawRect(context->renderer, &outline_screen_rect);
-    SDL_SetRenderDrawBlendMode(context->renderer, SDL_BLENDMODE_NONE);
-
-    for (int i = 0 ; i < node->sub_connections->size; i++){
-        Connection *sub_con = array_get(node->sub_connections, i);
-        render_connection(context, sub_con);
-    }
-
-    for (int i = 0 ; i < node->sub_nodes->size; i++){
-        Node *sub_node = array_get(node->sub_nodes, i);
-        render_node(context, sub_node);
-    }
-
-    Float_Rect screen_rect;
-    world_rect_to_screen(&node->close_btn->rect, &screen_rect);
-
-    Button screen_button = *node->close_btn;
-    screen_button.rect = screen_rect;
-
-    render_button(context, &screen_button);
-    render_pins(context, node);
 }
 
 void render_connection_dragging(RenderContext *context) {
@@ -568,30 +523,30 @@ void render_origin_marker(RenderContext *context) {
     assert(sim_state != NULL);
 
     float screen_x, screen_y;
-    world_point_to_screen(0, 0, &screen_x, &screen_y);
+    world_point_to_screen(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, &screen_x, &screen_y);
 
-    int outer_radius = (int)(15 * sim_state->camera_zoom);
-    int inner_radius = (int)(8 * sim_state->camera_zoom);
+    SDL_Renderer *renderer = context->renderer;
 
-    SDL_Rect outer_rect;
-    outer_rect.w = outer_radius * 2;
-    outer_rect.h = outer_radius * 2;
-    outer_rect.x = (int)(screen_x - outer_radius);
-    outer_rect.y = (int)(screen_y - outer_radius);
+    SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255);
 
-    SDL_SetTextureColorMod(context->image_cache.circle_texture, 64, 64, 64);
-    SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &outer_rect);
+    int crosshair_length = 5;
+    int crosshair_thickness = 1;
 
-    SDL_Rect inner_rect;
-    inner_rect.w = inner_radius * 2;
-    inner_rect.h = inner_radius * 2;
-    inner_rect.x = (int)(screen_x - inner_radius);
-    inner_rect.y = (int)(screen_y - inner_radius);
+    for (int t = -crosshair_thickness/2; t <= crosshair_thickness/2; t++) {
+        SDL_RenderDrawLine(
+            renderer,
+            (int)(screen_x - crosshair_length), (int)(screen_y + t),
+            (int)(screen_x + crosshair_length), (int)(screen_y + t)
+        );
+    }
 
-    SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 255, 0);
-    SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &inner_rect);
-
-    SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 255, 255);
+    for (int t = -crosshair_thickness/2; t <= crosshair_thickness/2; t++) {
+        SDL_RenderDrawLine(
+            renderer,
+            (int)(screen_x + t), (int)(screen_y - crosshair_length),
+            (int)(screen_x + t), (int)(screen_y + crosshair_length)
+        );
+    }
 }
 
 void render_selection_box(RenderContext *context) {
@@ -664,26 +619,62 @@ void render(RenderContext *context)
     render_knife_stroke(context);
     render_selection_box(context);
 
-    for (int i = 0; i < sim_state->connections->size; i++) {
-        Connection *connection = array_get(sim_state->connections, i);
-        assert(connection != NULL);
+    if (sim_state->subnode_window_parent != NULL) {
+        // Render subnode view
+        Node *parent_node = sim_state->subnode_window_parent;
 
-        render_connection(context, connection);
-    }
-
-    Node *last_node = NULL;
-
-    for (int i = 0; i < sim_state->nodes->size; i++) {
-        Node *node = array_get(sim_state->nodes, i);
-        assert(node != NULL);
-
-        if (node == sim_state->dragged_node) {
-            last_node = node;
-            continue;
+        if (parent_node->sub_connections != NULL) {
+            for (int i = 0; i < parent_node->sub_connections->size; i++) {
+                Connection *connection = array_get(parent_node->sub_connections, i);
+                assert(connection != NULL);
+                render_connection(context, connection);
+            }
         }
-        render_node(context, node);
+
+        if (parent_node->sub_nodes != NULL) {
+            Node *last_node = NULL;
+
+            for (int i = 0; i < parent_node->sub_nodes->size; i++) {
+                Node *node = array_get(parent_node->sub_nodes, i);
+                assert(node != NULL);
+
+                if (node == sim_state->dragged_node) {
+                    last_node = node;
+                    continue;
+                }
+                render_node(context, node);
+            }
+            if (last_node != NULL) render_node(context, last_node);
+        }
+
+        if (sim_state->subnode_window_button != NULL) {
+            render_button(context, sim_state->subnode_window_button);
+        }
     }
-    if (last_node != NULL) render_node(context, last_node);
+    else {
+        // Normal view
+        for (int i = 0; i < sim_state->connections->size; i++) {
+            Connection *connection = array_get(sim_state->connections, i);
+            assert(connection != NULL);
+
+            render_connection(context, connection);
+        }
+
+        Node *last_node = NULL;
+
+        for (int i = 0; i < sim_state->nodes->size; i++) {
+            Node *node = array_get(sim_state->nodes, i);
+            assert(node != NULL);
+
+            if (node == sim_state->dragged_node) {
+                last_node = node;
+                continue;
+            }
+            render_node(context, node);
+        }
+        if (last_node != NULL) render_node(context, last_node);
+
+    }
 
     for (int i = 0; i < sim_state->selected_nodes->size; i++) {
         Node *node = array_get(sim_state->selected_nodes, i);
@@ -695,15 +686,6 @@ void render(RenderContext *context)
     if (sim_state->is_cable_dragging) render_connection_dragging(context);
 
     render_top_bar(context);
-    for (int i = 0; i < sim_state->buttons->size; i++) {
-        Button *button = array_get(sim_state->buttons, i);
-
-        if (strncmp(button->name, IMG_PATH_PLAY, 23) == 0 && !sim_state->is_paused) { button->name = IMG_PATH_PAUSE; }
-        if (strncmp(button->name, IMG_PATH_PAUSE, 24) == 0 && sim_state->is_paused) { button->name = IMG_PATH_PLAY; }
-
-        assert(button != NULL);
-        render_button(context, button);
-    }
 
     if (sim_state->popup_state != NULL) render_popup(context);
 

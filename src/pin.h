@@ -16,7 +16,7 @@ typedef struct Pin {
     int id;
 } Pin;
 
-Pin *create_pin(int x, int y, int ii, Node *parent_node);
+Pin *create_pin(int ii, Node *parent_node);
 Pin* find_corresponding_pin(Pin *original_pin, DynamicArray *original_nodes, DynamicArray *pasted_nodes);
 Pin *find_pin_by_id(DynamicArray *nodes, int id);
 void print_pin(Pin *p);

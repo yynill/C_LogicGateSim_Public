@@ -6,10 +6,10 @@
 typedef struct DynamicArray DynamicArray;
 typedef struct Button Button;
 typedef struct SDL_Point SDL_Point;
+typedef struct Pin Pin;
 
 typedef struct Node {
     char *name;
-    int is_expanded;
     Float_Rect rect;
 
     DynamicArray *inputs;  // pins
@@ -19,28 +19,34 @@ typedef struct Node {
     DynamicArray *sub_nodes;
     DynamicArray *sub_connections;
     struct Node *parent;
-    Float_Rect outline_rect;
-    Button *close_btn;
+
+    DynamicArray *input_mappings; // PinMapping
+    DynamicArray *output_mappings; // PinMapping
 } Node;
+
+typedef struct PinMapping {
+    Pin *outer_pin;
+    Pin *inner_pin;
+} PinMapping;
 
 // functions
 void print_node(Node *node);
 void run_node(Node *node);
-void move_group_node_pins(Node *node);
-void reshape_outline_box(Node *node);
-
-void handle_close_group(void *function_data);
 void move_node(Node *node, float dx, float dy);
 
 Node *create_node(int num_inputs, int num_outputs, Operation *op, SDL_Point *spawn_pos, const char *name);
-Node *create_group_node(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections, int is_expanded);
-
+Node *create_group_node(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name, DynamicArray *sub_nodes, DynamicArray *sub_connections);
 Node *copy_node(Node *node);
+void reposition_node_pins(Node *node);
 
-Float_Rect calculate_outline_rect(DynamicArray *sub_nodes, DynamicArray *sub_connections);
-SDL_Point calculate_pos_from_outline_rect(Float_Rect outline_rect, Float_Rect node_rect);
-SDL_Point *find_most_top_left(DynamicArray *nodes);
 Float_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name);
+SDL_Point calculate_pos_for_group_node(DynamicArray *sub_nodes, DynamicArray *sub_connections);
 void free_node(Node *node);
+
+void create_pin_mappings(Node *group_node);
+PinMapping *create_pin_mapping(Pin *outer_pin, Pin *inner_pin);
+PinMapping *find_pin_mapping(Node *node, Pin *pin);
+void add_pin_mapping(Node *added_node);
+void remove_pin_mapping(Node *node);
 
 #endif // NODE_H

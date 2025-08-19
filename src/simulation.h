@@ -65,6 +65,9 @@ typedef struct SimulationState {
     Connection *new_connection;
 
     Pin *hovered_pin;
+
+    Node *subnode_window_parent;
+    Button *subnode_window_button;
 } SimulationState;
 
 // Function declarations
@@ -101,7 +104,7 @@ void rename_node();
 void delete_selected();
 void delete_node_and_connections(Node *node);
 Button *find_button_at_position(DynamicArray *buttons, int screen_x, int screen_y);
-Node *find_node_at_position(DynamicArray *nodes, float x, float y);
+Node *find_node_at_position(float x, float y);
 void start_selection_box();
 int try_draw_selection_box();
 int try_handle_node_dragging(float world_x, float world_y);
@@ -117,12 +120,17 @@ int try_add_connection_point();
 int try_handle_button_click();
 int try_handle_pin_click();
 int try_complete_connection();
-void print_node_and_subnodes(Node *node, int indent);
 
 void screen_point_to_world(float screen_x, float screen_y, float *world_x, float *world_y);
 void world_point_to_screen(float world_x, float world_y, float *screen_x, float *screen_y);
 
 void screen_rect_to_world(Float_Rect *screen, Float_Rect *out_world);
 void world_rect_to_screen(Float_Rect *world, Float_Rect *out_screen);
+
+void open_subnode_view(Node *clicked_node);
+void leave_subnode_view(void *function_data);
+DynamicArray *get_current_connections();
+DynamicArray *get_current_nodes();
+void adjust_parent_pins(Node *node);
 
 #endif // SIMULATION_H

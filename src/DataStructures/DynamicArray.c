@@ -55,6 +55,9 @@ void array_clear(DynamicArray *arr) {
 }
 
 void array_add(DynamicArray *arr, void *element) {
+    assert(arr != NULL);
+    assert(element != NULL);
+
     if (arr->size == arr->capacity) {
         arr->capacity = arr->capacity == 0 ? 4 : arr->capacity * 2;
         arr->data = realloc(arr->data, arr->capacity * sizeof(void*));
