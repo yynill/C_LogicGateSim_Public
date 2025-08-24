@@ -233,39 +233,39 @@ void render_img(RenderContext *context, SDL_Texture *texture, SDL_Rect *rect) {
 
 void render_breadcrumb(RenderContext *context) {
     assert(context != NULL);
-    
+
     if (sim_state->subnode_window_parent == NULL) return;
-    
+
     char breadcrumb[1024] = "Layer0";
-    
+
     int depth = 0;
     Node *current = sim_state->subnode_window_parent;
     while (current != NULL) {
         depth++;
         current = current->parent;
     }
-    
+
     Node **path = malloc(depth * sizeof(Node*));
     if (!path) return;
-    
+
     current = sim_state->subnode_window_parent;
     for (int i = depth - 1; i >= 0; i--) {
         path[i] = current;
         current = current->parent;
     }
-    
+
     strcpy(breadcrumb, "Layer0");
     for (int i = 0; i < depth; i++) {
         strcat(breadcrumb, " < ");
         strcat(breadcrumb, path[i]->name);
     }
-    
+
     free(path);
-    
+
     SDL_Color breadcrumb_color = {200, 200, 200, 255};
     int text_width, text_height;
-    
-    if (TTF_SizeText(context->font, breadcrumb, &text_width, &text_height) == 0) {        
+
+    if (TTF_SizeText(context->font, breadcrumb, &text_width, &text_height) == 0) {
         render_text(context, breadcrumb, 120, TOP_BAR_HEIGHT + 15, &breadcrumb_color, 1.0f);
     }
 }
@@ -285,7 +285,7 @@ void render_top_bar(RenderContext *context) {
         assert(button != NULL);
         render_button(context, button);
     }
-    
+
     render_breadcrumb(context);
 }
 
@@ -363,6 +363,8 @@ void render_selected_node_outline(RenderContext *context, Node *node) {
 }
 
 void render_pins(RenderContext *context, Node *node) {
+    SDL_Color hover_color = {0, 180, 255, 255};
+
     int num_inputs = node->inputs->size;
     for (int i = 0; i < num_inputs; i++) {
         Pin *pin = array_get(node->inputs, i);
@@ -373,7 +375,17 @@ void render_pins(RenderContext *context, Node *node) {
         pin_rect.h = (PIN_SIZE * sim_state->camera_zoom);
         SDL_Rect pin_screen_rect = float_rect_to_sdl_rect(&pin_rect);
 
-        if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 60, 60);
+        if (sim_state->hovered_pin == pin) {
+            SDL_SetTextureColorMod(context->image_cache.circle_texture, hover_color.r, hover_color.g, hover_color.b);
+            char* connected_light_name = find_connected_light_switch_name(pin);
+            if (connected_light_name != NULL) {
+                SDL_Surface *surface = TTF_RenderText_Blended(context->font, connected_light_name, hover_color);
+
+                int text_x = pin_screen_rect.x - (surface->w*sim_state->camera_zoom) - 5;
+                int text_y = pin_screen_rect.y - (PIN_SIZE * sim_state->camera_zoom) / 2;
+                render_text(context, connected_light_name, text_x, text_y, &hover_color, 1);
+            }
+        }
         else if (pin->state) SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 200, 103);
         else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 0);
         SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_screen_rect);
@@ -389,7 +401,15 @@ void render_pins(RenderContext *context, Node *node) {
         pin_rect.h = (PIN_SIZE * sim_state->camera_zoom);
         SDL_Rect pin_screen_rect = float_rect_to_sdl_rect(&pin_rect);
 
-        if (sim_state->hovered_pin == pin) SDL_SetTextureColorMod(context->image_cache.circle_texture, 255, 60, 60);
+        if (sim_state->hovered_pin == pin) {
+            SDL_SetTextureColorMod(context->image_cache.circle_texture, hover_color.r, hover_color.g, hover_color.b);
+            char* connected_light_name = find_connected_light_switch_name(pin);
+            if (connected_light_name != NULL) {
+                int text_x = pin_screen_rect.x + pin_screen_rect.w + 5;
+                int text_y = pin_screen_rect.y - (PIN_SIZE * sim_state->camera_zoom) / 2;
+                render_text(context, connected_light_name, text_x, text_y, &hover_color, 1);
+            }
+        }
         else if (pin->state) SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 200, 103);
         else SDL_SetTextureColorMod(context->image_cache.circle_texture, 0, 0, 0);
         SDL_RenderCopy(context->renderer, context->image_cache.circle_texture, NULL, &pin_screen_rect);

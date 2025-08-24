@@ -414,12 +414,14 @@ PinMapping *find_pin_mapping(Node *node, Pin *pin){
         for (int i = 0; i < node->input_mappings->size; i++) {
             PinMapping *mapping = array_get(node->input_mappings, i);
             if (mapping != NULL && mapping->inner_pin == pin) return mapping;
+            if (mapping != NULL && mapping->outer_pin == pin) return mapping;
         }
     }
     if (node->output_mappings != NULL) {
         for (int i = 0; i < node->output_mappings->size; i++) {
             PinMapping *mapping = array_get(node->output_mappings, i);
             if (mapping != NULL && mapping->inner_pin == pin) return mapping;
+            if (mapping != NULL && mapping->outer_pin == pin) return mapping;
         }
     }
     return NULL;
@@ -464,7 +466,7 @@ void remove_pin_mapping(Node *removed_node) {
             Connection *con = array_get(outer_pin->connected_connections, i);
             Connection_point *point = find_connection_point_with_pin(con, outer_pin);
             DynamicArray *connection_layer = get_connection_layer_of_node(parent);
-            delete_connection_branch(point, connection_layer); // XXX: this is the problem - I need to delete the connection from parent layer instead of the current layer
+            delete_connection_branch(point, connection_layer);
         }
 
         array_remove(parent->input_mappings, mapping);
@@ -481,7 +483,7 @@ void remove_pin_mapping(Node *removed_node) {
             Connection *con = array_get(outer_pin->connected_connections, i);
             Connection_point *point = find_connection_point_with_pin(con, outer_pin);
             DynamicArray *connection_layer = get_connection_layer_of_node(parent);
-            delete_connection_branch(point, connection_layer); // XXX: this is the problem - I need to delete the connection from parent layer instead of the current layer
+            delete_connection_branch(point, connection_layer);
         }
 
         array_remove(parent->output_mappings, mapping);

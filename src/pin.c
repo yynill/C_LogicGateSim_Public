@@ -85,3 +85,17 @@ void print_pin(Pin *p) {
     }
     printf("===================\n");
 }
+
+char* find_connected_light_switch_name(Pin *pin) {
+    if (pin->parent_node == NULL) return NULL;
+    if (pin->parent_node->sub_nodes == NULL) return NULL;
+    if (pin->parent_node->sub_nodes->size == 0) return NULL;
+
+    PinMapping *mapping = find_pin_mapping(pin->parent_node, pin);
+    if (mapping == NULL) return NULL;
+    if (mapping->inner_pin->parent_node->operation == lightNode || mapping->inner_pin->parent_node->operation == switchNode) {
+        return mapping->inner_pin->parent_node->name;
+    }
+
+    return NULL;
+}

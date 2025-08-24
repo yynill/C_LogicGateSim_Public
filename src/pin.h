@@ -20,6 +20,7 @@ Pin *create_pin(int ii, Node *parent_node);
 Pin* find_corresponding_pin(Pin *original_pin, DynamicArray *original_nodes, DynamicArray *pasted_nodes);
 Pin *find_pin_by_id(DynamicArray *nodes, int id);
 void print_pin(Pin *p);
+char* find_connected_light_switch_name(Pin *pin);
 
 extern int next_pin_id;
 

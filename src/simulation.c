@@ -946,8 +946,14 @@ void handle_group_nodes() {
 
     for (int i = 0; i < sim_state->selected_nodes->size; i++) {
         Node *node = array_get(sim_state->selected_nodes, i);
-        if(node->operation == switchNode)  num_inputs++;
-        if(node->operation == lightNode)  num_outputs++;
+        if(node->operation == switchNode)  {
+            num_inputs++;
+            remove_pin_mapping(node);
+        }
+        if(node->operation == lightNode)  {
+            num_outputs++;
+            remove_pin_mapping(node);
+        }
     }
 
     DynamicArray *matching_connections = find_fully_selected_connections(sim_state->selected_nodes);
