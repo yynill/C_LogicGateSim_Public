@@ -461,8 +461,8 @@ void render_node(RenderContext *context, Node *node) {
 
         int text_x = screen_node_rect.x + (screen_node_rect.w - text_width) / 2;
         int text_y = screen_node_rect.y + (screen_node_rect.h - text_height) / 2;
-        if (node->operation == switchNode) text_x = node_rect.x - text_width - 5;
-        if (node->operation == lightNode) text_x = node_rect.x + node_rect.w + 5;
+        if (node->operation == switchNode) text_x = screen_node_rect.x - text_width - 5;
+        if (node->operation == lightNode) text_x = screen_node_rect.x + screen_node_rect.w + 5;
 
         SDL_Rect render_rect = {
             text_x,
