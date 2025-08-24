@@ -45,7 +45,8 @@ void merge_connection(Connection *con1, Connection *con2) {
     }
     array_move_all(con1->points, con2->points);
 
-    array_remove(sim_state->connections, con2);
+    DynamicArray *current_connections = get_current_connection_layer();
+    array_remove(current_connections, con2);
     free(con2);
 }
 
@@ -131,7 +132,8 @@ void unmerge_connection(Connection *con, Connection_point *point1, Connection_po
         }
     }
 
-    array_add(sim_state->connections, new_con);
+    DynamicArray *current_connections = get_current_connection_layer();
+    array_add(current_connections, new_con);
 
     if(point1->neighbors->size == 0) {
         if(point1->linked_to_pin != NULL) {
@@ -204,8 +206,9 @@ Connection_point *find_connection_point_with_pin(Connection *con, Pin *pin) {
     return NULL;
 }
 
-void delete_connection_branch(Connection_point *point, Pin* pin_of_point) {
+void delete_connection_branch(Connection_point *point, DynamicArray *connections_layer) {
     assert(point != NULL);
+    assert(connections_layer != NULL);
 
     Connection *con = point->parent_connection;
     DynamicArray *points_to_remove = array_create(4);
@@ -233,27 +236,24 @@ void delete_connection_branch(Connection_point *point, Pin* pin_of_point) {
         }
     }
 
-    if(pin_of_point != NULL){
-        array_remove(con->input_pins, pin_of_point);
-        array_remove(con->output_pins, pin_of_point);
-    }
-
-    if(con->points->size == points_to_remove->size) {
+    if(con->points->size == points_to_remove->size) { // delete connection
         for (int i = 0; i < con->input_pins->size; i++) {
             Pin *p = array_get(con->input_pins, i);
             array_remove(p->connected_connections, con);
         }
+
         for (int i = 0; i < con->output_pins->size; i++) {
             Pin *p = array_get(con->output_pins, i);
             array_remove(p->connected_connections, con);
         }
 
         free_connection(con);
-        array_remove(sim_state->connections, con);
+        array_remove(connections_layer, con);
     }
-    else {
+    else { // delete branch
         for (int i = 0; i < points_to_remove->size; i++) {
             Connection_point *rm_point = array_get(points_to_remove, i);
+
             for (int j = 0; j < rm_point->neighbors->size; j++) {
                 Connection_point *neighbor = array_get(rm_point->neighbors, j);
                 array_remove(neighbor->neighbors, rm_point);

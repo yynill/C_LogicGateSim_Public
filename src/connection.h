@@ -29,7 +29,7 @@ void remove_connection_link(Connection_point *from, Connection_point *to);
 void add_pin(Connection *con, Pin *pin);
 void finalize_connection(Connection *con, Pin *pin);
 void roll_back_connection_branch(Connection *con, Connection_point *first_point, Connection_point *last_point);
-void delete_connection_branch(Connection_point *point, Pin* pin_of_point);
+void delete_connection_branch(Connection_point *point, DynamicArray *connections_layer);
 Connection_point *find_connection_point_with_pin(Connection *con, Pin *pin);
 void propagate_state(Connection *con);
 void update_connection_geometry(Connection *con);

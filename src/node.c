@@ -452,25 +452,21 @@ void remove_pin_mapping(Node *removed_node) {
     if (parent == NULL) return;
     if (parent->sub_nodes == NULL) return;
 
-    printf("removing pin mapping\n");
-
     if (removed_node->operation == switchNode) {
         Pin *inner_pin = array_get(removed_node->outputs, 0);
         PinMapping *mapping = find_pin_mapping(parent, inner_pin);
         Pin *outer_pin = mapping->outer_pin;
 
-        printf("outer pin: %d\n", outer_pin->id);
+        if (outer_pin == NULL) return;
 
         for (int i = 0; i < outer_pin->connected_connections->size; i++) {
             Connection *con = array_get(outer_pin->connected_connections, i);
             Connection_point *point = find_connection_point_with_pin(con, outer_pin);
-            delete_connection_branch(point, outer_pin);
-            printf("deleted connection branch\n");
+            DynamicArray *connection_layer = get_connection_layer_of_node(parent);
+            delete_connection_branch(point, connection_layer); // XXX: this is the problem - I need to delete the connection from parent layer instead of the current layer
         }
-        
-        printf("removing mapping\n");
+
         array_remove(parent->input_mappings, mapping);
-        printf("removing pin\n");
         array_remove(parent->inputs, outer_pin);
     }
     else if (removed_node->operation == lightNode) {
@@ -478,18 +474,16 @@ void remove_pin_mapping(Node *removed_node) {
         PinMapping *mapping = find_pin_mapping(parent, inner_pin);
         Pin *outer_pin = mapping->outer_pin;
 
-        printf("outer pin: %d\n", outer_pin->id);
+        if (outer_pin == NULL) return;
 
         for (int i = 0; i < outer_pin->connected_connections->size; i++) {
             Connection *con = array_get(outer_pin->connected_connections, i);
             Connection_point *point = find_connection_point_with_pin(con, outer_pin);
-            delete_connection_branch(point, outer_pin);
-            printf("deleted connection branch\n");
+            DynamicArray *connection_layer = get_connection_layer_of_node(parent);
+            delete_connection_branch(point, connection_layer); // XXX: this is the problem - I need to delete the connection from parent layer instead of the current layer
         }
 
-        printf("removing mapping\n");
         array_remove(parent->output_mappings, mapping);
-        printf("removing pin\n");
         array_remove(parent->outputs, outer_pin);
     }
 

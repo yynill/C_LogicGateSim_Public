@@ -129,8 +129,9 @@ void world_rect_to_screen(Float_Rect *world, Float_Rect *out_screen);
 
 void open_subnode_view(Node *clicked_node);
 void leave_subnode_view(void *function_data);
-DynamicArray *get_current_connections();
-DynamicArray *get_current_nodes();
-void adjust_parent_pins(Node *node);
+
+DynamicArray *get_current_connection_layer();
+DynamicArray *get_connection_layer_of_node(Node *node);
+DynamicArray *get_current_node_layer();
 
 #endif // SIMULATION_H

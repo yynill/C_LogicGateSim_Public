@@ -204,7 +204,7 @@ void add_node(void *function_data) {
         num_outputs = 0;
     }
 
-    DynamicArray *current_nodes = get_current_nodes();
+    DynamicArray *current_nodes = get_current_node_layer();
     Node *new_node = create_node(num_inputs, num_outputs, op, &node_pos, button->name);
     array_add(current_nodes, new_node);
 
@@ -219,12 +219,11 @@ void cut_connection() {
     assert(sim_state->connections != NULL);
     assert(sim_state->knife_stroke != NULL);
 
-
     if (sim_state->knife_stroke->size < 2) {
         goto end;
     }
 
-    DynamicArray *current_connections = get_current_connections();
+    DynamicArray *current_connections = get_current_connection_layer();
     for (int i = 0; i < current_connections->size; i++) {
         Connection *con = array_get(current_connections, i);
         if (con == NULL || con->points == NULL || con->points->size < 2) continue;
@@ -250,7 +249,7 @@ void cut_connection() {
         }
     }
 
-    end:
+end:
     array_free(sim_state->knife_stroke);
     sim_state->knife_stroke = array_create(16);
     sim_state->is_knife_dragging = 0;
@@ -325,7 +324,7 @@ int try_handle_connection_right_click() {
     Connection_point *closest_p2 = NULL;
     float closest_distance = 10.0f;
 
-    DynamicArray *current_connections = get_current_connections();
+    DynamicArray *current_connections = get_current_connection_layer();
     for (int i = 0; i < current_connections->size; i++) {
         Connection *con = array_get(current_connections, i);
 
@@ -463,7 +462,7 @@ int try_handle_node_dragging(float world_x, float world_y) {
 
 DynamicArray* get_all_connection_points() {
     DynamicArray *result = array_create(16);
-    DynamicArray *current_connections = get_current_connections();
+    DynamicArray *current_connections = get_current_connection_layer();
 
     for (int i = 0; i < current_connections->size; i++) {
         Connection *con = array_get(current_connections, i);
@@ -513,7 +512,7 @@ int try_hover_connection_point(float world_x, float world_y) {
 
 int try_update_pin_hover(float world_x, float world_y) {
     sim_state->hovered_pin = NULL;
-    DynamicArray *current_nodes = get_current_nodes();
+    DynamicArray *current_nodes = get_current_node_layer();
     for (int i = 0; i < current_nodes->size; i++) {
         Node *node = array_get(current_nodes, i);
 
@@ -567,14 +566,23 @@ int point_in_node(float world_x, float world_y, Node *node) {
     return point_in_rect(world_x, world_y, node->rect);
 }
 
-DynamicArray *get_current_connections() {
+DynamicArray *get_current_connection_layer() {
     if (sim_state->subnode_window_parent != NULL && sim_state->subnode_window_parent->sub_connections != NULL) {
         return sim_state->subnode_window_parent->sub_connections;
     }
     return sim_state->connections;
 }
 
-DynamicArray *get_current_nodes() {
+DynamicArray *get_connection_layer_of_node(Node *node) {
+    if (node->parent != NULL) {
+        return node->parent->sub_connections;
+    }
+    else {
+        return sim_state->connections;
+    }
+}
+
+DynamicArray *get_current_node_layer() {
     if (sim_state->subnode_window_parent != NULL && sim_state->subnode_window_parent->sub_nodes != NULL) {
         return sim_state->subnode_window_parent->sub_nodes;
     }
@@ -582,7 +590,7 @@ DynamicArray *get_current_nodes() {
 }
 
 Node *find_node_at_position(float x, float y) {
-    DynamicArray *current_nodes = get_current_nodes();
+    DynamicArray *current_nodes = get_current_node_layer();
     for (int i = current_nodes->size - 1; i >= 0 ; i--) {
         Node *node = array_get(current_nodes, i);
         if (!point_in_node(x, y, node)) continue;
@@ -591,7 +599,6 @@ Node *find_node_at_position(float x, float y) {
     }
     return NULL;
 }
-
 
 Button *find_button_at_position(DynamicArray *buttons, int screen_x, int screen_y) {
     assert(buttons != NULL);
@@ -643,7 +650,7 @@ int try_complete_connection() {
         add_connection_link(point, sim_state->last_connection_point);
         finalize_connection(sim_state->new_connection, sim_state->hovered_pin);
 
-        DynamicArray *current_connections = get_current_connections();
+        DynamicArray *current_connections = get_current_connection_layer();
         if (!array_contains(current_connections, sim_state->new_connection)) {
             array_add(current_connections, sim_state->new_connection);
         }
@@ -665,7 +672,8 @@ void delete_node_and_connections(Node *node) {
         for (int j = 0; j < i_pin->connected_connections->size; j++) {
             Connection *con = array_get(i_pin->connected_connections, j);
             Connection_point *point = find_connection_point_with_pin(con, i_pin);
-            delete_connection_branch(point, i_pin);
+            DynamicArray *connection_layer = get_connection_layer_of_node(node);
+            delete_connection_branch(point, connection_layer);
         }
     }
 
@@ -674,7 +682,8 @@ void delete_node_and_connections(Node *node) {
         for (int j = 0; j < o_pin->connected_connections->size; j++) {
             Connection *con = array_get(o_pin->connected_connections, j);
             Connection_point *point = find_connection_point_with_pin(con, o_pin);
-            delete_connection_branch(point, o_pin);
+            DynamicArray *connection_layer = get_connection_layer_of_node(node);
+            delete_connection_branch(point, connection_layer);
         }
     }
 
@@ -694,7 +703,7 @@ void delete_node_and_connections(Node *node) {
         }
     }
     else {
-        DynamicArray *current_nodes = get_current_nodes();
+        DynamicArray *current_nodes = get_current_node_layer();
         if (array_contains(current_nodes, node)) {
             array_remove(current_nodes, node);
         }
@@ -711,8 +720,8 @@ int try_handle_selection() {
     Float_Rect selection_box_world;
     screen_rect_to_world(&sim_state->selection_box, &selection_box_world);
 
-    DynamicArray *current_nodes = get_current_nodes();
-    DynamicArray *current_connections = get_current_connections();
+    DynamicArray *current_nodes = get_current_node_layer();
+    DynamicArray *current_connections = get_current_connection_layer();
 
     for (int i = 0; i < current_nodes->size; i++) {
         Node *node = array_get(current_nodes, i);
@@ -890,7 +899,7 @@ void handle_paste() {
             node_copy = create_node(current->inputs->size, current->outputs->size, current->operation, &pos, current->name);
         }
 
-        DynamicArray *current_nodes = get_current_nodes();
+        DynamicArray *current_nodes = get_current_node_layer();
         array_add(current_nodes, node_copy);
         array_add(sim_state->selected_nodes, node_copy);
 
@@ -912,7 +921,7 @@ void handle_paste() {
                 array_add(sim_state->selected_connection_points, point);
             }
 
-            DynamicArray *current_connections = get_current_connections();
+            DynamicArray *current_connections = get_current_connection_layer();
             array_add(current_connections, new_con);
             propagate_state(new_con);
             update_connection_geometry(new_con);
@@ -964,7 +973,7 @@ void handle_group_nodes() {
     sim_state->selected_connection_points->size = 0;
     sim_state->selected_nodes->size = 0;
 
-    DynamicArray *current_nodes = get_current_nodes();
+    DynamicArray *current_nodes = get_current_node_layer();
     array_add(current_nodes, group_node);
     free(matching_connections);
 }
