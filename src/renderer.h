@@ -104,6 +104,7 @@ void render_connection_points(RenderContext *context, Connection *con);
 void render_origin_marker(RenderContext *context);
 void render_pins(RenderContext *context, Node *node);
 void render_button(RenderContext *context, Button *button);
+void render_breadcrumb(RenderContext *context);
 void render(RenderContext *context);
 
 #endif // RENDERER_H

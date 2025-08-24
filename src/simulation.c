@@ -144,23 +144,6 @@ void simulation_update() {
     //     printf("🔵loop\n");
     //     print_connection(con);
     // }
-
-    // for (int i = 0; i < sim_state->nodes->size; i++) {
-    //     Node *node = array_get(sim_state->nodes, i);
-    //     if (node->sub_nodes != NULL) {
-    //         printf("output_mappings\n");
-    //         for (int i = 0; i < node->output_mappings->size; i++)
-    //         {
-    //             PinMapping *pm = array_get(node->output_mappings, i);
-    //             printf("in: %d - out: %d\n", pm->inner_pin->id, pm->outer_pin->id);
-    //         }
-    //         printf("input_mappings\n");
-    //         for (int i = 0; i < node->input_mappings->size; i++)
-    //         {
-    //             PinMapping *pm = array_get(node->input_mappings, i);
-    //             printf("in: %d - out: %d\n", pm->inner_pin->id, pm->outer_pin->id);
-    //         }
-    //     }
     // }
 }
 
@@ -219,37 +202,39 @@ void cut_connection() {
     assert(sim_state->connections != NULL);
     assert(sim_state->knife_stroke != NULL);
 
-    if (sim_state->knife_stroke->size < 2) {
-        goto end;
-    }
+    printf("todo\n"); // TODO: crashes when cut inside a group node so
 
-    DynamicArray *current_connections = get_current_connection_layer();
-    for (int i = 0; i < current_connections->size; i++) {
-        Connection *con = array_get(current_connections, i);
-        if (con == NULL || con->points == NULL || con->points->size < 2) continue;
+//     if (sim_state->knife_stroke->size < 2) {
+//         goto end;
+//     }
 
-        for (int j = 0; j < con->points->size; j++) {
-            Connection_point *con_p1 = array_get(con->points, j);
+//     DynamicArray *current_connections = get_current_connection_layer();
+//     for (int i = 0; i < current_connections->size; i++) {
+//         Connection *con = array_get(current_connections, i);
+//         if (con == NULL || con->points == NULL || con->points->size < 2) continue;
 
-            for (int k = 0; k < con_p1->neighbors->size; k++) {
-                Connection_point *con_p2 = array_get(con_p1->neighbors, k);
-                if (con_p1 < con_p2) continue;
+//         for (int j = 0; j < con->points->size; j++) {
+//             Connection_point *con_p1 = array_get(con->points, j);
 
-                for (int l = 0; l < sim_state->knife_stroke->size - 1; l++) {
-                    SDL_Point *knife_p1 = array_get(sim_state->knife_stroke, l);
-                    SDL_Point *knife_p2 = array_get(sim_state->knife_stroke, l + 1);
+//             for (int k = 0; k < con_p1->neighbors->size; k++) {
+//                 Connection_point *con_p2 = array_get(con_p1->neighbors, k);
+//                 if (con_p1 < con_p2) continue;
 
-                    SDL_Point intersection;
-                    if (segment_intersection(knife_p1, knife_p2, &(SDL_Point){con_p1->pos.x, con_p1->pos.y}, &(SDL_Point){con_p2->pos.x, con_p2->pos.y}, &intersection)) {
-                        unmerge_connection(con, con_p1, con_p2);
-                        goto end;
-                    }
-                }
-            }
-        }
-    }
+//                 for (int l = 0; l < sim_state->knife_stroke->size - 1; l++) {
+//                     SDL_Point *knife_p1 = array_get(sim_state->knife_stroke, l);
+//                     SDL_Point *knife_p2 = array_get(sim_state->knife_stroke, l + 1);
 
-end:
+//                     SDL_Point intersection;
+//                     if (segment_intersection(knife_p1, knife_p2, &(SDL_Point){con_p1->pos.x, con_p1->pos.y}, &(SDL_Point){con_p2->pos.x, con_p2->pos.y}, &intersection)) {
+//                         unmerge_connection(con, con_p1, con_p2);
+//                         goto end;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+// end:
     array_free(sim_state->knife_stroke);
     sim_state->knife_stroke = array_create(16);
     sim_state->is_knife_dragging = 0;
@@ -966,8 +951,8 @@ void handle_group_nodes() {
     }
 
     DynamicArray *matching_connections = find_fully_selected_connections(sim_state->selected_nodes);
-
     SDL_Point pos = calculate_pos_for_group_node(sim_state->selected_nodes, matching_connections);
+
     Node *group_node = create_group_node(&pos, num_inputs, num_outputs, sim_state->popup_state->name_input.text, sim_state->selected_nodes, matching_connections);
 
     sim_state->selected_connection_points->size = 0;

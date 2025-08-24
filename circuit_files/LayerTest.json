@@ -1,51 +1,62 @@
 {
 	"nodes":	[{
-			"name":	"NULL",
+			"name":	"L1",
 			"pos":	{
-				"x":	532,
+				"x":	529,
 				"y":	314
 			},
 			"inputs":	[2],
 			"outputs":	[3],
 			"operation":	"nullGate",
 			"sub_nodes":	[{
-					"name":	"SWITCH",
+					"name":	"L2",
 					"pos":	{
-						"x":	434,
-						"y":	299
+						"x":	529,
+						"y":	314
 					},
-					"inputs":	[],
-					"outputs":	[0],
-					"operation":	"switchNode",
-					"sub_nodes":	[],
-					"sub_connections":	[]
-				}, {
-					"name":	"LIGHT",
-					"pos":	{
-						"x":	576,
-						"y":	294
-					},
-					"inputs":	[1],
-					"outputs":	[],
-					"operation":	"lightNode",
-					"sub_nodes":	[],
-					"sub_connections":	[]
-				}],
-			"sub_connections":	[{
-					"input_pins":	[1],
-					"output_pins":	[0],
-					"points":	[{
-							"x":	488,
-							"y":	317,
-							"linked_pin_id":	0,
-							"neighbors":	[1]
+					"inputs":	[12],
+					"outputs":	[13],
+					"operation":	"nullGate",
+					"sub_nodes":	[{
+							"name":	"SWITCH",
+							"pos":	{
+								"x":	431,
+								"y":	299
+							},
+							"inputs":	[],
+							"outputs":	[0],
+							"operation":	"switchNode",
+							"sub_nodes":	[],
+							"sub_connections":	[]
 						}, {
-							"x":	576,
-							"y":	312,
-							"linked_pin_id":	1,
-							"neighbors":	[0]
+							"name":	"LIGHT",
+							"pos":	{
+								"x":	573,
+								"y":	294
+							},
+							"inputs":	[1],
+							"outputs":	[],
+							"operation":	"lightNode",
+							"sub_nodes":	[],
+							"sub_connections":	[]
+						}],
+					"sub_connections":	[{
+							"input_pins":	[1],
+							"output_pins":	[0],
+							"points":	[{
+									"x":	485,
+									"y":	317,
+									"linked_pin_id":	0,
+									"neighbors":	[1]
+								}, {
+									"x":	573,
+									"y":	312,
+									"linked_pin_id":	1,
+									"neighbors":	[0]
+								}]
 						}]
-				}]
+				}],
+			"sub_connections":	[]
 		}, {
 			"name":	"SWITCH",
 			"pos":	{
@@ -73,7 +84,7 @@
 			"input_pins":	[5],
 			"output_pins":	[3],
 			"points":	[{
-					"x":	632,
+					"x":	629,
 					"y":	332,
 					"linked_pin_id":	3,
 					"neighbors":	[1]
@@ -92,7 +103,7 @@
 					"linked_pin_id":	4,
 					"neighbors":	[1]
 				}, {
-					"x":	532,
+					"x":	529,
 					"y":	332,
 					"linked_pin_id":	2,
 					"neighbors":	[0]

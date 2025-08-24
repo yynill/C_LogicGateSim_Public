@@ -231,6 +231,45 @@ void render_img(RenderContext *context, SDL_Texture *texture, SDL_Rect *rect) {
     SDL_RenderCopy(context->renderer, texture, NULL, rect);
 }
 
+void render_breadcrumb(RenderContext *context) {
+    assert(context != NULL);
+    
+    if (sim_state->subnode_window_parent == NULL) return;
+    
+    char breadcrumb[1024] = "Layer0";
+    
+    int depth = 0;
+    Node *current = sim_state->subnode_window_parent;
+    while (current != NULL) {
+        depth++;
+        current = current->parent;
+    }
+    
+    Node **path = malloc(depth * sizeof(Node*));
+    if (!path) return;
+    
+    current = sim_state->subnode_window_parent;
+    for (int i = depth - 1; i >= 0; i--) {
+        path[i] = current;
+        current = current->parent;
+    }
+    
+    strcpy(breadcrumb, "Layer0");
+    for (int i = 0; i < depth; i++) {
+        strcat(breadcrumb, " < ");
+        strcat(breadcrumb, path[i]->name);
+    }
+    
+    free(path);
+    
+    SDL_Color breadcrumb_color = {200, 200, 200, 255};
+    int text_width, text_height;
+    
+    if (TTF_SizeText(context->font, breadcrumb, &text_width, &text_height) == 0) {        
+        render_text(context, breadcrumb, 120, TOP_BAR_HEIGHT + 15, &breadcrumb_color, 1.0f);
+    }
+}
+
 void render_top_bar(RenderContext *context) {
     assert(context != NULL);
     SDL_SetRenderDrawColor(context->renderer, 40, 40, 40, 255);
@@ -246,6 +285,8 @@ void render_top_bar(RenderContext *context) {
         assert(button != NULL);
         render_button(context, button);
     }
+    
+    render_breadcrumb(context);
 }
 
 void render_button(RenderContext *context, Button *button) {

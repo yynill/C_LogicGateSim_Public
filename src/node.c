@@ -57,7 +57,6 @@ Node *create_node(int num_inputs, int num_outputs, Operation *op, SDL_Point *spa
         return NULL;
     }
 
-
     for (int i = 0; i < num_inputs; i++) {
         Pin *p = create_pin(1, node);
         array_add(node->inputs, p);
@@ -90,12 +89,14 @@ Node *create_group_node(SDL_Point *spawn_pos, int num_inputs, int num_outputs, c
     for (int i = 0; i < group_node->sub_nodes->size; i++) {
         Node *sub_node = array_get(group_node->sub_nodes, i);
         sub_node->parent = group_node;
-        array_remove(sim_state->nodes, sub_node);
+        DynamicArray *current_nodes = get_current_node_layer();
+        array_remove(current_nodes, sub_node);
     }
 
     for (int i = 0; i < group_node->sub_connections->size; i++) {
         Connection *sub_con = array_get(group_node->sub_connections, i);
-        array_remove(sim_state->connections, sub_con);
+        DynamicArray *current_connections = get_current_connection_layer();
+        array_remove(current_connections, sub_con);
     }
 
     group_node->input_mappings = array_create(8);
