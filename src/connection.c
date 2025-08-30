@@ -240,11 +240,13 @@ void delete_connection_branch(Connection_point *point, DynamicArray *connections
         for (int i = 0; i < con->input_pins->size; i++) {
             Pin *p = array_get(con->input_pins, i);
             array_remove(p->connected_connections, con);
+            p->state = 0;
         }
 
         for (int i = 0; i < con->output_pins->size; i++) {
             Pin *p = array_get(con->output_pins, i);
             array_remove(p->connected_connections, con);
+            p->state = 0;
         }
 
         free_connection(con);
@@ -253,6 +255,11 @@ void delete_connection_branch(Connection_point *point, DynamicArray *connections
     else { // delete branch
         for (int i = 0; i < points_to_remove->size; i++) {
             Connection_point *rm_point = array_get(points_to_remove, i);
+
+            if (rm_point->linked_to_pin != NULL) {
+                Pin *linked_pin = rm_point->linked_to_pin;
+                array_remove(linked_pin->connected_connections, con);
+            }
 
             for (int j = 0; j < rm_point->neighbors->size; j++) {
                 Connection_point *neighbor = array_get(rm_point->neighbors, j);
@@ -305,6 +312,11 @@ void roll_back_connection_branch(Connection *con, Connection_point *first_point,
 
     for (int i = 0; i < points_to_remove->size; i++) {
         Connection_point *rm_point = array_get(points_to_remove, i);
+
+        if (rm_point->linked_to_pin != NULL) {
+            Pin *linked_pin = rm_point->linked_to_pin;
+            array_remove(linked_pin->connected_connections, con);
+        }
 
         for (int j = 0; j < con->points->size; j++) {
             Connection_point *other = array_get(con->points, j);
@@ -581,39 +593,63 @@ void print_connection(Connection *con) {
     printf("Connection (%p):\n", (void *)con);
 
     printf("  Input Pins:\n");
-    for (int i = 0; i < con->input_pins->size; i++) {
-        Pin *pin = (Pin *)array_get(con->input_pins, i);
-        Node *node = pin->parent_node;
-        printf("    Pin %d: Node: %s (%p) | Pin (%p) State: %d | ID: %d | Pos: (%f, %f)\n",
-               i,
-               node ? node->name : "NULL",
-               (void *)node,
-               (void *)pin,
-               pin->state,
-               pin->id,
-               pin->x, pin->y);
+    if (con->input_pins != NULL) {
+        for (int i = 0; i < con->input_pins->size; i++) {
+            Pin *pin = (Pin *)array_get(con->input_pins, i);
+            if (pin != NULL) {
+                Node *node = pin->parent_node;
+                printf("    Pin %d: Node: %s (%p) | Pin (%p) State: %d | ID: %d | Pos: (%f, %f)\n",
+                       i,
+                       node ? node->name : "NULL",
+                       (void *)node,
+                       (void *)pin,
+                       pin->state,
+                       pin->id,
+                       pin->x, pin->y);
+            } else {
+                printf("    Pin %d: NULL\n", i);
+            }
+        }
+    } else {
+        printf("    Input pins array is NULL\n");
     }
 
     printf("  Output Pins:\n");
-    for (int i = 0; i < con->output_pins->size; i++) {
-        Pin *pin = (Pin *)array_get(con->output_pins, i);
-        Node *node = pin->parent_node;
-        printf("    Pin %d: Node: %s (%p) | Pin (%p) State: %d | ID: %d | Pos: (%f, %f)\n",
-               i,
-               node ? node->name : "NULL",
-               (void *)node,
-               (void *)pin,
-               pin->state,
-               pin->id,
-               pin->x, pin->y);
+    if (con->output_pins != NULL) {
+        for (int i = 0; i < con->output_pins->size; i++) {
+            Pin *pin = (Pin *)array_get(con->output_pins, i);
+            if (pin != NULL) {
+                Node *node = pin->parent_node;
+                printf("    Pin %d: Node: %s (%p) | Pin (%p) State: %d | ID: %d | Pos: (%f, %f)\n",
+                       i,
+                       node ? node->name : "NULL",
+                       (void *)node,
+                       (void *)pin,
+                       pin->state,
+                       pin->id,
+                       pin->x, pin->y);
+            } else {
+                printf("    Pin %d: NULL\n", i);
+            }
+        }
+    } else {
+        printf("    Output pins array is NULL\n");
     }
 
     printf("  Cable State: %d\n", con->state);
 
     printf("  Connection_point:\n");
-    for (int i = 0; i < con->points->size; i++) {
-        Connection_point *point = (Connection_point *)array_get(con->points, i);
-        printf("    Connection_point (%p) %d (x: %f, y: %f) | neighbors: %d | parent_connection: %p | linked_to_pin: %p\n", (void *)point, i, point->pos.x, point->pos.y, point->neighbors->size, (void *)point->parent_connection, (void *)point->linked_to_pin);
+    if (con->points != NULL) {
+        for (int i = 0; i < con->points->size; i++) {
+            Connection_point *point = (Connection_point *)array_get(con->points, i);
+            if (point != NULL) {
+                printf("    Connection_point (%p) %d (x: %f, y: %f) | neighbors: %d | parent_connection: %p | linked_to_pin: %p\n", (void *)point, i, point->pos.x, point->pos.y, point->neighbors->size, (void *)point->parent_connection, (void *)point->linked_to_pin);
+            } else {
+                printf("    Connection_point %d: NULL\n", i);
+            }
+        }
+    } else {
+        printf("    Points array is NULL\n");
     }
 
     printf("--------------------------\n");

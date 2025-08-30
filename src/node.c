@@ -1,9 +1,9 @@
 #include "node.h"
 
-Float_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name) {
+Float_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name, Operation *operation) {
     Float_Rect rect;
 
-    if (strcmp(name, "SWITCH") == 0 || strcmp(name, "LIGHT") == 0) {
+    if (operation == switchNode || operation == lightNode) {
         rect.x = spawn_pos->x;
         rect.y = spawn_pos->y;
         rect.w = SMALL_NODE_WIDTH;
@@ -34,7 +34,7 @@ Node *create_node(int num_inputs, int num_outputs, Operation *op, SDL_Point *spa
     Node *node = malloc(sizeof(Node));
     if (!node) return NULL;
 
-    Float_Rect rect = calc_rect(spawn_pos, num_inputs, num_outputs, name);
+    Float_Rect rect = calc_rect(spawn_pos, num_inputs, num_outputs, name, op);
     node->rect = rect;
     node->operation = op;
     node->name = strdup(name && name[0] ? name : "NULL");
@@ -462,12 +462,14 @@ void remove_pin_mapping(Node *removed_node) {
 
         if (outer_pin == NULL) return;
 
-        for (int i = 0; i < outer_pin->connected_connections->size; i++) {
-            Connection *con = array_get(outer_pin->connected_connections, i);
+        DynamicArray *connections_copy = flat_copy(outer_pin->connected_connections);
+        for (int i = 0; i < connections_copy->size; i++) {
+            Connection *con = array_get(connections_copy, i);
             Connection_point *point = find_connection_point_with_pin(con, outer_pin);
             DynamicArray *connection_layer = get_connection_layer_of_node(parent);
             delete_connection_branch(point, connection_layer);
         }
+        free(connections_copy);
 
         array_remove(parent->input_mappings, mapping);
         array_remove(parent->inputs, outer_pin);
@@ -479,12 +481,15 @@ void remove_pin_mapping(Node *removed_node) {
 
         if (outer_pin == NULL) return;
 
-        for (int i = 0; i < outer_pin->connected_connections->size; i++) {
-            Connection *con = array_get(outer_pin->connected_connections, i);
+        // Create a copy of connected connections to avoid modification during iteration
+        DynamicArray *connections_copy = flat_copy(outer_pin->connected_connections);
+        for (int i = 0; i < connections_copy->size; i++) {
+            Connection *con = array_get(connections_copy, i);
             Connection_point *point = find_connection_point_with_pin(con, outer_pin);
             DynamicArray *connection_layer = get_connection_layer_of_node(parent);
             delete_connection_branch(point, connection_layer);
         }
+        free(connections_copy);
 
         array_remove(parent->output_mappings, mapping);
         array_remove(parent->outputs, outer_pin);
@@ -502,7 +507,7 @@ void reposition_node_pins(Node *node) {
 
     // Update rectangle size
     SDL_Point pos = {.x = node->rect.x, .y = node->rect.y};
-    Float_Rect new_rect = calc_rect(&pos, num_inputs, num_outputs, node->name);
+    Float_Rect new_rect = calc_rect(&pos, num_inputs, num_outputs, node->name, node->operation);
     node->rect = new_rect;
 
     float spacing = 0.5f * PIN_SIZE;

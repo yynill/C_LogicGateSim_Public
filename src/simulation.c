@@ -144,7 +144,6 @@ void simulation_update() {
     //     printf("🔵loop\n");
     //     print_connection(con);
     // }
-    // }
 }
 
 void null_function(void *function_data) {
@@ -652,33 +651,46 @@ int try_complete_connection() {
 }
 
 void delete_node_and_connections(Node *node) {
-    for (int i = 0; i < node->inputs->size; i++) {
-        Pin *i_pin = array_get(node->inputs, i);
-        for (int j = 0; j < i_pin->connected_connections->size; j++) {
-            Connection *con = array_get(i_pin->connected_connections, j);
-            Connection_point *point = find_connection_point_with_pin(con, i_pin);
-            DynamicArray *connection_layer = get_connection_layer_of_node(node);
-            delete_connection_branch(point, connection_layer);
-        }
-    }
-
-    for (int i = 0; i < node->outputs->size; i++) {
-        Pin *o_pin = array_get(node->outputs, i);
-        for (int j = 0; j < o_pin->connected_connections->size; j++) {
-            Connection *con = array_get(o_pin->connected_connections, j);
-            Connection_point *point = find_connection_point_with_pin(con, o_pin);
-            DynamicArray *connection_layer = get_connection_layer_of_node(node);
-            delete_connection_branch(point, connection_layer);
-        }
-    }
+    if (!node) return;
 
     if (node->sub_nodes != NULL) {
         for (int i = 0; i < node->sub_nodes->size; i ++) {
             Node *sub_node = array_get(node->sub_nodes, i);
             delete_node_and_connections(sub_node);
         }
-        array_free(node->sub_nodes);
         node->sub_nodes = NULL;
+    }
+
+    if (node->sub_connections != NULL) {
+        for (int i = 0; i < node->sub_connections->size; i++) {
+            Connection *sub_con = array_get(node->sub_connections, i);
+            free_connection(sub_con);
+        }
+        node->sub_connections->size = 0;
+    }
+
+    for (int i = 0; i < node->inputs->size; i++) {
+        Pin *i_pin = array_get(node->inputs, i);
+        DynamicArray *connections_copy = flat_copy(i_pin->connected_connections);
+        for (int j = 0; j < connections_copy->size; j++) {
+            Connection *con = array_get(connections_copy, j);
+            Connection_point *point = find_connection_point_with_pin(con, i_pin);
+            DynamicArray *connection_layer = get_connection_layer_of_node(node);
+            delete_connection_branch(point, connection_layer);
+        }
+        free(connections_copy);
+    }
+
+    for (int i = 0; i < node->outputs->size; i++) {
+        Pin *o_pin = array_get(node->outputs, i);
+        DynamicArray *connections_copy = flat_copy(o_pin->connected_connections);
+        for (int j = 0; j < connections_copy->size; j++) {
+            Connection *con = array_get(connections_copy, j);
+            Connection_point *point = find_connection_point_with_pin(con, o_pin);
+            DynamicArray *connection_layer = get_connection_layer_of_node(node);
+            delete_connection_branch(point, connection_layer);
+        }
+        free(connections_copy);
     }
 
     if (node->parent != NULL) {
@@ -813,8 +825,8 @@ void process_left_click() {
         if(try_handle_popup()) return;
     }
     if (try_handle_pin_click()) return;
-    if (try_handle_node_left_click()) return;
     if (try_handle_connection_point_left_click()) return;
+    if (try_handle_node_left_click()) return;
 
     start_selection_box();
 }
@@ -838,11 +850,11 @@ void process_mouse_motion() {
     float world_x, world_y;
     screen_point_to_world(sim_state->mouse_x, sim_state->mouse_y, &world_x, &world_y);
 
-    if (try_hover_connection_point(world_x, world_y)) return;
-    if (try_handle_knife_stroke_motion(world_x, world_y)) return;
     if (try_update_pin_hover(world_x, world_y)) return;
+    if (try_hover_connection_point(world_x, world_y)) return;
     if (try_handle_node_dragging(world_x, world_y)) return;
     if (try_handle_connection_point_dragging(world_x, world_y)) return;
+    if (try_handle_knife_stroke_motion(world_x, world_y)) return;
     if (try_draw_selection_box()) return;
 }
 

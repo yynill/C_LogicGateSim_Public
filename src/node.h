@@ -39,7 +39,7 @@ Node *create_group_node(SDL_Point *spawn_pos, int num_inputs, int num_outputs, c
 Node *copy_node(Node *node);
 void reposition_node_pins(Node *node);
 
-Float_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name);
+Float_Rect calc_rect(SDL_Point *spawn_pos, int num_inputs, int num_outputs, const char *name, Operation *operation);
 SDL_Point calculate_pos_for_group_node(DynamicArray *sub_nodes, DynamicArray *sub_connections);
 void free_node(Node *node);
 
