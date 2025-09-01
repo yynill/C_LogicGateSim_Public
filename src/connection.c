@@ -412,7 +412,6 @@ void propagate_state(Connection *con) {
 
 void free_connection(Connection *con) {
     assert(con != NULL);
-    // printf("‼️ free_connection - connection %p\n", (void*)con);
 
     if (con->points != NULL) {
         array_free(con->points);

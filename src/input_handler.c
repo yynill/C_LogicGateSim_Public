@@ -58,6 +58,9 @@ void handle_input(SDL_Event *event) {
                 void *nothing = NULL;
                 handle_escape(nothing);
             }
+            else if (event->key.keysym.sym == SDLK_SPACE) {
+                handle_space_pressed();
+            }
             else if (event->key.keysym.sym == SDLK_RETURN || event->key.keysym.sym == SDLK_KP_ENTER) {
                 void *nothing = NULL;
                 handle_enter(nothing);

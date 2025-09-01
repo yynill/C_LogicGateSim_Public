@@ -68,8 +68,6 @@ Node *create_node(int num_inputs, int num_outputs, Operation *op, SDL_Point *spa
 
     reposition_node_pins(node);
 
-    run_node(node);
-
     return node;
 }
 
@@ -112,17 +110,6 @@ Node *copy_node(Node *node) {
     SDL_Point *pos = &point;
 
     if (node->sub_nodes == NULL) {
-        printf("🔵copy_node\n");
-        print_node(node);
-        for (int i = 0; i < node->inputs->size; i++) {
-            Pin *p = array_get(node->inputs, i);
-            printf("🔵copy_node - input %d: %d\n", i, p->id);
-        }
-        for (int i = 0; i < node->outputs->size; i++) {
-            Pin *p = array_get(node->outputs, i);
-            printf("🔵copy_node - output %d: %d\n", i, p->id);
-        }
-
         int num_inputs = node->inputs->size;
         int num_outputs = node->outputs->size;
 
@@ -244,7 +231,6 @@ void free_node(Node *node) {
     node = NULL;
 }
 
-
 void run_node(Node *node) {
     assert(node != NULL);
     assert(node->inputs && node->outputs && node->operation);
@@ -257,7 +243,8 @@ void run_node(Node *node) {
     int result = node->operation(a, b);
 
     for (int i = 0; i < node->outputs->size; i++) {
-        ((Pin *)array_get(node->outputs, i))->state = result;
+        Pin *pin = array_get(node->outputs, i);
+        pin->state = result;
     }
 
     if (node->sub_nodes) {

@@ -745,17 +745,15 @@ int try_handle_selection() {
 }
 
 void rename_node() {
-    if (sim_state->selected_nodes->size != 1) {
-        printf("❌ You can only rename 1 note at a time - select only 1\n");
-        return;
+    for (int i = 0; i < sim_state->selected_nodes->size; i++) {
+        Node *note_to_rename = array_get(sim_state->selected_nodes, i);
+        if (note_to_rename->name != NULL) {
+            free(note_to_rename->name);
+        }
+
+        note_to_rename->name = strdup(sim_state->popup_state->name_input.text);
     }
 
-    Node *note_to_rename = array_get(sim_state->selected_nodes, 0);
-    if (note_to_rename->name != NULL) {
-        free(note_to_rename->name);
-    }
-
-    note_to_rename->name = strdup(sim_state->popup_state->name_input.text);
     return;
 }
 
@@ -1033,7 +1031,9 @@ void handle_enter(void *function_data) {
     }
 }
 
-
+void handle_space_pressed() {
+    sim_state->is_paused = !sim_state->is_paused;
+}
 
 void screen_point_to_world(float screen_x, float screen_y, float *world_x, float *world_y) {
     *world_x = (screen_x / sim_state->camera_zoom) + sim_state->camera_x;

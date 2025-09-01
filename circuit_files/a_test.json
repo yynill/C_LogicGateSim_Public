@@ -1,0 +1,54 @@
+{
+	"nodes":	[{
+			"name":	"NOR",
+			"pos":	{
+				"x":	576,
+				"y":	137
+			},
+			"inputs":	[3, 4],
+			"outputs":	[5],
+			"operation":	"norGate",
+			"sub_nodes":	[],
+			"sub_connections":	[]
+		}, {
+			"name":	"NOR",
+			"pos":	{
+				"x":	578,
+				"y":	235
+			},
+			"inputs":	[12, 13],
+			"outputs":	[14],
+			"operation":	"norGate",
+			"sub_nodes":	[],
+			"sub_connections":	[]
+		}],
+	"connections":	[{
+			"input_pins":	[12],
+			"output_pins":	[5],
+			"points":	[{
+					"x":	578,
+					"y":	250,
+					"linked_pin_id":	12,
+					"neighbors":	[1]
+				}, {
+					"x":	676,
+					"y":	159,
+					"linked_pin_id":	5,
+					"neighbors":	[0]
+				}]
+		}, {
+			"input_pins":	[4],
+			"output_pins":	[14],
+			"points":	[{
+					"x":	576,
+					"y":	167,
+					"linked_pin_id":	4,
+					"neighbors":	[1]
+				}, {
+					"x":	678,
+					"y":	257,
+					"linked_pin_id":	14,
+					"neighbors":	[0]
+				}]
+		}]
+}

@@ -91,6 +91,7 @@ void handle_l_pressed();
 void handle_r_pressed();
 void handle_escape(void *function_data);
 void handle_enter(void *function_data);
+void handle_space_pressed();
 
 void null_function(void *function_data);
 void null_function_wo_data();
