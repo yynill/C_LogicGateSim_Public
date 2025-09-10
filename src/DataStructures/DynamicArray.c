@@ -68,7 +68,18 @@ void array_add(DynamicArray *arr, void *element) {
 
 void *array_get(DynamicArray *arr, int index) {
     assert(arr != NULL);
-    assert(index >= 0 && index < arr->size);
+    assert(index >= 0);
+    assert(index < arr->size);
+
+    return arr->data[index];
+}
+
+void *array_get_with_caller(DynamicArray *arr, int index, const char *caller) {
+    if (arr == NULL || index < 0 || index >= arr->size) {
+        fprintf(stderr, "array_get_with_caller: Invalid access by %s (index: %d, size: %d)\n", 
+                caller ? caller : "unknown", index, arr ? arr->size : -1);
+        return NULL;
+    }
     return arr->data[index];
 }
 

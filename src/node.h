@@ -3,6 +3,9 @@
 #pragma once
 
 #include "main.h"
+#include "coordinate_system.h"
+#include "operation.h"
+
 typedef struct DynamicArray DynamicArray;
 typedef struct Button Button;
 typedef struct SDL_Point SDL_Point;

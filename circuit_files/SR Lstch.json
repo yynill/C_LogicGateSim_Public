@@ -1,0 +1,129 @@
+{
+	"nodes":	[{
+			"name":	"SWITCH",
+			"pos":	{
+				"x":	218,
+				"y":	284
+			},
+			"inputs":	[],
+			"outputs":	[0],
+			"operation":	"switchNode",
+			"sub_nodes":	[],
+			"sub_connections":	[]
+		}, {
+			"name":	"SWITCH",
+			"pos":	{
+				"x":	209,
+				"y":	202
+			},
+			"inputs":	[],
+			"outputs":	[1],
+			"operation":	"switchNode",
+			"sub_nodes":	[],
+			"sub_connections":	[]
+		}, {
+			"name":	"NOR",
+			"pos":	{
+				"x":	396,
+				"y":	314
+			},
+			"inputs":	[5, 6],
+			"outputs":	[7],
+			"operation":	"norGate",
+			"sub_nodes":	[],
+			"sub_connections":	[]
+		}, {
+			"name":	"NOR",
+			"pos":	{
+				"x":	404,
+				"y":	230
+			},
+			"inputs":	[8, 9],
+			"outputs":	[10],
+			"operation":	"norGate",
+			"sub_nodes":	[],
+			"sub_connections":	[]
+		}, {
+			"name":	"LIGHT",
+			"pos":	{
+				"x":	630,
+				"y":	221
+			},
+			"inputs":	[11],
+			"outputs":	[],
+			"operation":	"lightNode",
+			"sub_nodes":	[],
+			"sub_connections":	[]
+		}],
+	"connections":	[{
+			"input_pins":	[5],
+			"output_pins":	[10],
+			"points":	[{
+					"x":	396,
+					"y":	329,
+					"linked_pin_id":	5,
+					"neighbors":	[1]
+				}, {
+					"x":	504,
+					"y":	252,
+					"linked_pin_id":	10,
+					"neighbors":	[0]
+				}]
+		}, {
+			"input_pins":	[9],
+			"output_pins":	[7],
+			"points":	[{
+					"x":	404,
+					"y":	260,
+					"linked_pin_id":	9,
+					"neighbors":	[1]
+				}, {
+					"x":	496,
+					"y":	336,
+					"linked_pin_id":	7,
+					"neighbors":	[0]
+				}]
+		}, {
+			"input_pins":	[6],
+			"output_pins":	[0],
+			"points":	[{
+					"x":	272,
+					"y":	302,
+					"linked_pin_id":	0,
+					"neighbors":	[1]
+				}, {
+					"x":	396,
+					"y":	344,
+					"linked_pin_id":	6,
+					"neighbors":	[0]
+				}]
+		}, {
+			"input_pins":	[8],
+			"output_pins":	[1],
+			"points":	[{
+					"x":	404,
+					"y":	245,
+					"linked_pin_id":	8,
+					"neighbors":	[1]
+				}, {
+					"x":	263,
+					"y":	220,
+					"linked_pin_id":	1,
+					"neighbors":	[0]
+				}]
+		}, {
+			"input_pins":	[11],
+			"output_pins":	[10],
+			"points":	[{
+					"x":	504,
+					"y":	252,
+					"linked_pin_id":	10,
+					"neighbors":	[1]
+				}, {
+					"x":	630,
+					"y":	239,
+					"linked_pin_id":	11,
+					"neighbors":	[0]
+				}]
+		}]
+}

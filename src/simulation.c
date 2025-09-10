@@ -66,6 +66,8 @@ SimulationState *simulation_init() {
     state->camera_zoom = 1;
 
     state->is_paused = 1;
+    state->node_queue = init_queue();
+    state->step_count = 0;
 
     state->hovered_connection_point = NULL;
     state->dragging_connection_point = NULL;
@@ -102,6 +104,7 @@ void simulation_cleanup() {
 
         array_free(sim_state->buttons);
         array_free(sim_state->knife_stroke);
+        free_queue(sim_state->node_queue);
         free(sim_state);
     }
 }
@@ -195,6 +198,9 @@ void add_node(void *function_data) {
     }
 
     add_pin_mapping(new_node);
+    if (!queue_contains(sim_state->node_queue, new_node)) {
+        enqueue(sim_state->node_queue, new_node);
+    }
 }
 
 void cut_connection() {
@@ -246,18 +252,20 @@ void toggle_play_pause(void *function_data) {
 }
 
 void one_step(void *function_data) {
-
     (void)function_data;
 
-    for (int i = 0; i < sim_state->nodes->size; i++) {
-        Node *node = array_get(sim_state->nodes, i);
-        run_node(node);
-    }
+    Node *node = dequeue(sim_state->node_queue);
+    if (node == NULL) return;
+
+    run_node(node);
 
     for (int i = 0; i < sim_state->connections->size; i++) {
         Connection *con = array_get(sim_state->connections, i);
         propagate_state(con);
     }
+
+    print_queue(sim_state->node_queue);
+    sim_state->step_count++;
 }
 
 int try_handle_node_left_click() {
@@ -601,6 +609,9 @@ void toggle_switch_outputs(Node *switch_node) {
         Pin *pin = array_get(switch_node->outputs, i);
         pin->state = !pin->state;
     }
+    if (!queue_contains(sim_state->node_queue, switch_node)) {
+        enqueue(sim_state->node_queue, switch_node);
+    }
 }
 
 void clean_up_connection() {
@@ -652,6 +663,8 @@ int try_complete_connection() {
 
 void delete_node_and_connections(Node *node) {
     if (!node) return;
+
+    queue_find_and_remove(sim_state->node_queue, node);
 
     if (node->sub_nodes != NULL) {
         for (int i = 0; i < node->sub_nodes->size; i ++) {
@@ -948,6 +961,8 @@ void delete_selected() {
     sim_state->clipboard_nodes = NULL;
     sim_state->selected_nodes->size = 0;
     sim_state->selected_connection_points->size = 0;
+
+    print_queue(sim_state->node_queue);
 }
 
 void handle_group_nodes() {
@@ -966,6 +981,11 @@ void handle_group_nodes() {
         }
     }
 
+    for (int i = 0; i < sim_state->selected_nodes->size; i++) {
+        Node *n = array_get(sim_state->selected_nodes, i);
+        queue_find_and_remove(sim_state->node_queue, n);
+    }
+
     DynamicArray *matching_connections = find_fully_selected_connections(sim_state->selected_nodes);
     SDL_Point pos = calculate_pos_for_group_node(sim_state->selected_nodes, matching_connections);
 
@@ -976,6 +996,9 @@ void handle_group_nodes() {
 
     DynamicArray *current_nodes = get_current_node_layer();
     array_add(current_nodes, group_node);
+    if (!queue_contains(sim_state->node_queue, group_node)) {
+        enqueue(sim_state->node_queue, group_node);
+    }
     free(matching_connections);
 }
 

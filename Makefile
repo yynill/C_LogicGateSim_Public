@@ -18,6 +18,7 @@ LDFLAGS = -L/opt/homebrew/opt/sdl2/lib -L/opt/homebrew/opt/sdl2_ttf/lib -L/opt/h
 # Main program configuration
 MAIN_SRC = src/main.c \
 		   src/DataStructures/DynamicArray.c \
+		   src/DataStructures/Queue.c \
 		   src/cJSON/cJSON.c \
            src/simulation.c \
            src/input_handler.c \

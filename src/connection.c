@@ -25,6 +25,9 @@ Connection *start_connection(Pin *pin) {
 }
 
 void merge_connection(Connection *con1, Connection *con2) {
+    assert(con1 != NULL);
+    assert(con2 != NULL);
+
     for (int i = 0; i < con2->input_pins->size; i++) {
         Pin *pin = array_get(con2->input_pins, i);
         array_clear(pin->connected_connections);

@@ -52,6 +52,9 @@ typedef struct SimulationState {
 
     int is_paused;
 
+    Queue *node_queue;
+    int step_count;
+
     Node *dragged_node;
     Node *last_dragged_node;
     float last_node_x;

@@ -18,6 +18,7 @@
 #include <sys/time.h>
 
 #include "DataStructures/DynamicArray.h"
+#include "DataStructures/Queue.h"
 #include "cJSON/cJSON.h"
 #include "coordinate_system.h"
 #include "operation.h"

@@ -1,4 +1,5 @@
 #include "performanceMonitor.h"
+#include "DataStructures/Queue.h"
 
 PerformanceMetrics *init_performance_monitoring() {
     PerformanceMetrics *pm = (PerformanceMetrics *)malloc(sizeof(PerformanceMetrics));
@@ -98,7 +99,9 @@ void print_performance_metrics(PerformanceMetrics *pm) {
     if (pm == NULL || sim_state == NULL) return;
 
     int con_sum = sim_state->connections->size;
+    int step_count = sim_state->step_count;
     int node_sum = count_nodes(sim_state->nodes, &con_sum);
+    int queue_size_count = queue_size(sim_state->node_queue);
 
     printf("=======PERFORMANCE METRICS=======\n");
     if (pm->fps > 30)      printf("\033[32mFPS: %.1f\033[0m\n", pm->fps);
@@ -109,7 +112,8 @@ void print_performance_metrics(PerformanceMetrics *pm) {
     printf("Simulation time:   %.5f ms (%.2f%%)\n", pm->simulation_time, pm->simulation_time_percentage);
     printf("Nodes:             %d\n", node_sum);
     printf("Connections:       %d\n", con_sum);
-
+    printf("Nodes in queue:    %d\n", queue_size_count);
+    printf("Step count:        %d\n", step_count);
 }
 
 int count_nodes(DynamicArray* nodes, int *con_sum) {
