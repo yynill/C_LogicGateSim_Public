@@ -115,9 +115,9 @@ void load_graph_from_json(void *function_data) {
             Node *node = json_to_node(node_json);
             if (node) {
                 array_add(sim_state->nodes, node);
-                if (!queue_contains(sim_state->node_queue, node)) {
+                // if (!queue_contains(sim_state->node_queue, node)) {
                     enqueue(sim_state->node_queue, node);
-                }
+                // }
             }
         }
     }

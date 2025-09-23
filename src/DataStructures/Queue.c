@@ -50,13 +50,15 @@ Node *dequeue(Queue *q) {
 
 void print_queue(Queue *q) {
     assert(q != NULL);
-    QueueItem *item = q->head;
-    while (item != NULL) {
-        Node *node = item->node;
-        const char *name = (node && node->name) ? node->name : "(null)";
-        printf("🔵node %p name: %s\n", (void *)node, name);
-        item = item->next;
-    }
+    printf("---------------\n");
+    printf("Queue size: %d\n", queue_size(q));
+    // QueueItem *item = q->head;
+    // while (item != NULL) {
+    //     Node *node = item->node;
+    //     const char *name = (node && node->name) ? node->name : "(null)";
+    //     printf("🔵node %p name: %s\n", (void *)node, name);
+    //     item = item->next;
+    // }
 }
 
 void free_queue(Queue *q) {

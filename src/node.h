@@ -10,6 +10,7 @@ typedef struct DynamicArray DynamicArray;
 typedef struct Button Button;
 typedef struct SDL_Point SDL_Point;
 typedef struct Pin Pin;
+typedef struct Connection Connection;
 
 typedef struct Node {
     char *name;
@@ -51,5 +52,6 @@ PinMapping *create_pin_mapping(Pin *outer_pin, Pin *inner_pin);
 PinMapping *find_pin_mapping(Node *node, Pin *pin);
 void add_pin_mapping(Node *added_node);
 void remove_pin_mapping(Node *node);
+void add_input_nodes_to_queue(Connection *con);
 
 #endif // NODE_H

@@ -1,4 +1,5 @@
 #include "connection.h"
+#include "node.h"
 
 void add_pin(Connection *con, Pin *pin) {
     if (pin->is_input) {
@@ -369,6 +370,8 @@ void finalize_connection(Connection *con, Pin *pin) {
     assert(pin != NULL);
 
     add_pin(con, pin);
+
+    add_input_nodes_to_queue(con);
 
     propagate_state(con);
     update_connection_geometry(con);

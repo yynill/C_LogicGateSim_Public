@@ -251,18 +251,48 @@ void toggle_play_pause(void *function_data) {
     sim_state->is_paused = !sim_state->is_paused;
 }
 
+void propagate_all_connections(DynamicArray *connections) {
+    if (!connections) return;
+    
+    for (int i = 0; i < connections->size; i++) {
+        Connection *con = array_get(connections, i);
+        propagate_state(con);
+    }
+}
+
+void propagate_all_connections_recursive(DynamicArray *connections) {
+    if (!connections) return;
+    
+    for (int i = 0; i < connections->size; i++) {
+        Connection *con = array_get(connections, i);
+        propagate_state(con);
+    }
+}
+
+void propagate_all_connections_in_nodes(DynamicArray *nodes) {
+    if (!nodes) return;
+    
+    for (int i = 0; i < nodes->size; i++) {
+        Node *node = array_get(nodes, i);
+        if (node->sub_connections) {
+            propagate_all_connections_recursive(node->sub_connections);
+        }
+        if (node->sub_nodes) {
+            propagate_all_connections_in_nodes(node->sub_nodes);
+        }
+    }
+}
+
 void one_step(void *function_data) {
     (void)function_data;
+    
+    propagate_all_connections(sim_state->connections);
+    propagate_all_connections_in_nodes(sim_state->nodes);
 
     Node *node = dequeue(sim_state->node_queue);
     if (node == NULL) return;
 
     run_node(node);
-
-    for (int i = 0; i < sim_state->connections->size; i++) {
-        Connection *con = array_get(sim_state->connections, i);
-        propagate_state(con);
-    }
 
     print_queue(sim_state->node_queue);
     sim_state->step_count++;
@@ -915,6 +945,19 @@ void handle_paste() {
             node_copy->parent = sim_state->subnode_window_parent;
             add_pin_mapping(node_copy);
         }
+
+        if (!queue_contains(sim_state->node_queue, node_copy)) {
+            enqueue(sim_state->node_queue, node_copy);
+        }
+
+        if (node_copy->sub_nodes != NULL) {
+            for (int j = 0; j < node_copy->sub_nodes->size; j++) {
+                Node *sub_node = array_get(node_copy->sub_nodes, j);
+                if (!queue_contains(sim_state->node_queue, sub_node)) {
+                    enqueue(sim_state->node_queue, sub_node);
+                }
+            }
+        }
     }
 
     DynamicArray *matching_connections = find_fully_selected_connections(sim_state->clipboard_nodes);
@@ -961,8 +1004,6 @@ void delete_selected() {
     sim_state->clipboard_nodes = NULL;
     sim_state->selected_nodes->size = 0;
     sim_state->selected_connection_points->size = 0;
-
-    print_queue(sim_state->node_queue);
 }
 
 void handle_group_nodes() {
