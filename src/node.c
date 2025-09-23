@@ -260,7 +260,7 @@ void add_connected_nodes_to_queue(Node *node) {
                         map->outer_pin->state = map->inner_pin->state;
                         
                         for (int l = 0; l < map->outer_pin->connected_connections->size; l++) {
-                            Connection *outer_con = array_get_with_caller(map->outer_pin->connected_connections, l, "add_connected_nodes_to_queue");
+                            Connection *outer_con = array_get(map->outer_pin->connected_connections, l);
                             for (int m = 0; m < outer_con->input_pins->size; m++) {
                                 Pin *con_p2 = array_get(outer_con->input_pins, m);
                                 if (con_p == con_p2) continue;
@@ -318,13 +318,13 @@ void run_node(Node *node) {
     int state_changed = 0;
 
     if (node->operation != switchNode) {
-        int a = ((Pin *)array_get_with_caller(node->inputs, 0, "run_node 1"))->state;
-        int b = (node->inputs->size > 1) ? ((Pin *)array_get_with_caller(node->inputs, 1, "run_node 2"))->state : 0;
+        int a = ((Pin *)array_get(node->inputs, 0))->state;
+        int b = (node->inputs->size > 1) ? ((Pin *)array_get(node->inputs, 1))->state : 0;
 
         int result = node->operation(a, b);
 
         for (int i = 0; i < node->outputs->size; i++) {
-            Pin *pin = array_get_with_caller(node->outputs, i, "run_node 3");
+            Pin *pin = array_get(node->outputs, i);
             if (pin->state != result) {
                 state_changed = 1;
             }
@@ -342,7 +342,7 @@ void run_node(Node *node) {
     if (node->sub_nodes) {
         if (node->input_mappings) {
             for (int i = 0; i < node->input_mappings->size; i++) {
-                PinMapping *mapping = array_get_with_caller(node->input_mappings, i, "run_node 4");
+                PinMapping *mapping = array_get(node->input_mappings, i);
                 if (mapping != NULL && mapping->inner_pin != NULL && mapping->outer_pin != NULL) {
                     mapping->inner_pin->state = mapping->outer_pin->state;
                 }
@@ -351,26 +351,26 @@ void run_node(Node *node) {
 
         if (node->sub_connections) {
             for (int i = 0; i < node->sub_connections->size; i++) {
-                Connection *sub_con = array_get_with_caller(node->sub_connections, i, "run_node 6");
+                Connection *sub_con = array_get(node->sub_connections, i);
                 propagate_state(sub_con);
             }
         }
 
         for (int i = 0; i < node->sub_nodes->size; i++) {
-            Node *sub_node = array_get_with_caller(node->sub_nodes, i, "run_node 5");
+            Node *sub_node = array_get(node->sub_nodes, i);
             run_node(sub_node);
         }
 
         if (node->sub_connections) {
             for (int i = 0; i < node->sub_connections->size; i++) {
-                Connection *sub_con = array_get_with_caller(node->sub_connections, i, "run_node 6");
+                Connection *sub_con = array_get(node->sub_connections, i);
                 propagate_state(sub_con);
             }
         }
 
         if (node->output_mappings) {
             for (int i = 0; i < node->output_mappings->size; i++) {
-                PinMapping *mapping = array_get_with_caller(node->output_mappings, i, "run_node 7");
+                PinMapping *mapping = array_get(node->output_mappings, i);
                 if (mapping != NULL && mapping->inner_pin != NULL && mapping->outer_pin != NULL) {
                     mapping->outer_pin->state = mapping->inner_pin->state;
                 }

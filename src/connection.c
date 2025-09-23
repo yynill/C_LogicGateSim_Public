@@ -243,13 +243,17 @@ void delete_connection_branch(Connection_point *point, DynamicArray *connections
     if(con->points->size == points_to_remove->size) { // delete connection
         for (int i = 0; i < con->input_pins->size; i++) {
             Pin *p = array_get(con->input_pins, i);
-            array_remove(p->connected_connections, con);
+            if(p->connected_connections != NULL) {
+                array_remove(p->connected_connections, con);
+            }
             p->state = 0;
         }
 
         for (int i = 0; i < con->output_pins->size; i++) {
             Pin *p = array_get(con->output_pins, i);
-            array_remove(p->connected_connections, con);
+            if(p->connected_connections != NULL) {
+                array_remove(p->connected_connections, con);
+            }
             p->state = 0;
         }
 
