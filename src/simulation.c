@@ -207,39 +207,51 @@ void cut_connection() {
     assert(sim_state->connections != NULL);
     assert(sim_state->knife_stroke != NULL);
 
-    printf("todo\n"); // TODO: crashes when cut inside a group node so
+    if (sim_state->knife_stroke->size < 2) {
+        goto end;
+    }
 
-//     if (sim_state->knife_stroke->size < 2) {
-//         goto end;
-//     }
+    DynamicArray *current_connections = get_current_connection_layer();
+    DynamicArray *connections_to_delete = array_create(4);
+    DynamicArray *corresponding_points_to_delete = array_create(4);
 
-//     DynamicArray *current_connections = get_current_connection_layer();
-//     for (int i = 0; i < current_connections->size; i++) {
-//         Connection *con = array_get(current_connections, i);
-//         if (con == NULL || con->points == NULL || con->points->size < 2) continue;
+    for (int l = 0; l < sim_state->knife_stroke->size - 1; l++) {
+        SDL_Point *knife_p1 = array_get(sim_state->knife_stroke, l);
+        SDL_Point *knife_p2 = array_get(sim_state->knife_stroke, l + 1);
+        
+        for (int i = 0; i < current_connections->size; i++) {
+            Connection *con = array_get(current_connections, i);
+            if (con == NULL || con->points == NULL || con->points->size < 2) continue;
 
-//         for (int j = 0; j < con->points->size; j++) {
-//             Connection_point *con_p1 = array_get(con->points, j);
+            for (int j = 0; j < con->points->size; j++) {
+                Connection_point *con_p1 = array_get(con->points, j);
 
-//             for (int k = 0; k < con_p1->neighbors->size; k++) {
-//                 Connection_point *con_p2 = array_get(con_p1->neighbors, k);
-//                 if (con_p1 < con_p2) continue;
+                for (int k = 0; k < con_p1->neighbors->size; k++) {
+                    Connection_point *con_p2 = array_get(con_p1->neighbors, k);
+                    if (con_p1 < con_p2) continue;
 
-//                 for (int l = 0; l < sim_state->knife_stroke->size - 1; l++) {
-//                     SDL_Point *knife_p1 = array_get(sim_state->knife_stroke, l);
-//                     SDL_Point *knife_p2 = array_get(sim_state->knife_stroke, l + 1);
+                    SDL_Point intersection;
+                    if (segment_intersection(knife_p1, knife_p2, &(SDL_Point){con_p1->pos.x, con_p1->pos.y}, &(SDL_Point){con_p2->pos.x, con_p2->pos.y}, &intersection)) {
+                        array_add(connections_to_delete, con);
+                        array_add(corresponding_points_to_delete, con_p1);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
-//                     SDL_Point intersection;
-//                     if (segment_intersection(knife_p1, knife_p2, &(SDL_Point){con_p1->pos.x, con_p1->pos.y}, &(SDL_Point){con_p2->pos.x, con_p2->pos.y}, &intersection)) {
-//                         unmerge_connection(con, con_p1, con_p2);
-//                         goto end;
-//                     }
-//                 }
-//             }
-//         }
-//     }
+    for (int i = 0; i < connections_to_delete->size; i++) {
+        Connection *con_to_delete = array_get(connections_to_delete, i);
+        Connection_point *start_point = array_get(corresponding_points_to_delete, i);
+        if (con_to_delete->points->size > 0) {
+            delete_connection_branch(start_point, current_connections);
+        }
+    }
 
-// end:
+    free(connections_to_delete);
+    free(corresponding_points_to_delete);
+end:
     array_free(sim_state->knife_stroke);
     sim_state->knife_stroke = array_create(16);
     sim_state->is_knife_dragging = 0;
@@ -253,7 +265,7 @@ void toggle_play_pause(void *function_data) {
 
 void propagate_all_connections(DynamicArray *connections) {
     if (!connections) return;
-    
+
     for (int i = 0; i < connections->size; i++) {
         Connection *con = array_get(connections, i);
         propagate_state(con);
@@ -262,7 +274,7 @@ void propagate_all_connections(DynamicArray *connections) {
 
 void propagate_all_connections_recursive(DynamicArray *connections) {
     if (!connections) return;
-    
+
     for (int i = 0; i < connections->size; i++) {
         Connection *con = array_get(connections, i);
         propagate_state(con);
@@ -271,7 +283,7 @@ void propagate_all_connections_recursive(DynamicArray *connections) {
 
 void propagate_all_connections_in_nodes(DynamicArray *nodes) {
     if (!nodes) return;
-    
+
     for (int i = 0; i < nodes->size; i++) {
         Node *node = array_get(nodes, i);
         if (node->sub_connections) {
@@ -285,7 +297,7 @@ void propagate_all_connections_in_nodes(DynamicArray *nodes) {
 
 void one_step(void *function_data) {
     (void)function_data;
-    
+
     propagate_all_connections(sim_state->connections);
     propagate_all_connections_in_nodes(sim_state->nodes);
 
@@ -1143,3 +1155,4 @@ void world_rect_to_screen(Float_Rect *world, Float_Rect *out_screen) {
     out_screen->w = fabsf(screen_x2 - screen_x1);
     out_screen->h = fabsf(screen_y2 - screen_y1);
 }
+
